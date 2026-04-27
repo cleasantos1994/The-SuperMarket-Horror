@@ -24,6 +24,10 @@ public:
     void RegisterDay5Events(class AntoniAI& a, class CustomerAI& c,
                             class MarketMap& map, class AudioManager& audio,
                             class GameStateMachine& gsm);
+    void RegisterSecretEvents(class AntoniAI& a, class CustomerAI& c1,
+                              class CustomerAI& c2, class CustomerAI& c3,
+                              class MarketMap& map, class AudioManager& audio,
+                              class GameStateMachine& gsm);
 
 private:
     std::vector<StoryEvent> events_;

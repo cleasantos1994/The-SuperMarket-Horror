@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1022573451357",
+    "project_id": "the-supermarket-c94fb",
+    "storage_bucket": "the-supermarket-c94fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1022573451357:android:c2f128549352d345e415b4",
+        "android_client_info": {
+          "package_name": "com.bahost01.thesupermarket"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmLaA3cZTpf0eo_FpJBoAEcw_S-aGyHqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1022573451357:android:717b71c0727aef2ce415b4",
+        "android_client_info": {
+          "package_name": "com.cstudioss.thesupermakethorror"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmLaA3cZTpf0eo_FpJBoAEcw_S-aGyHqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -21,6 +21,8 @@ public:
     void DrawHUD(int fear, const std::string& activeTask,
                  bool nearInteractable, const std::string& interactHint,
                  float playTime, bool hasKeys, bool antoniChasing);
+    void DrawThreatIndicator(float intensity, float angle);
+    void SetUIScale(float scale);
     void DrawPauseMenu(int hoveredItem);
 
     void DrawJumpscare(float intensity);

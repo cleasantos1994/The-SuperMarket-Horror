@@ -17,7 +17,9 @@ enum class AntoniState {
     POINTING,
     CHASING,
     JUMPSCARE_POSE,
-    CATCHING
+    CATCHING,
+    DISGUISED,
+    AMBUSHING
 };
 
 class AntoniAI {
@@ -34,6 +36,8 @@ public:
     void BeginKidnap(glm::vec3 victimPos);
     void BeginOilThrow(glm::vec3 centerPos);
     void BeginChase(glm::vec3 playerPos);
+    void SetDisguised(bool disguised);
+    void SetAmbush(bool ambush, glm::vec3 pos);
     void Reset();
 
     AntoniState State()       const { return state_; }
@@ -54,6 +58,8 @@ private:
     float         visibility_  = 0.0f;
     float         swayAngle_   = 0.0f;
     bool          hasOilJug_   = true;
+    bool          isDisguised_ = false;
+    glm::vec3     ambushPos_;
 
     void UpdateChase(float dt, const glm::vec3& playerPos);
     void ComputeMatrix(float time);

@@ -1,15 +1,12 @@
 #include "AntoniAI.h"
 #include "ModelLoader.h"
 #include "Shader.h"
-#include "ParticleSystem.h"
 #include <glm/gtc/matrix_transform.hpp>
-#include <algorithm>
+#include <iostream>
 
 AntoniAI::AntoniAI(const std::string& modelPath) {
     model_ = new ModelLoader(modelPath);
     pos_ = {0, 0, 0};
-    targetPos_ = {0, 0, 0};
-    TransitionTo(AntoniState::ABSENT);
 }
 
 AntoniAI::~AntoniAI() {
@@ -17,62 +14,73 @@ AntoniAI::~AntoniAI() {
 }
 
 void AntoniAI::Update(float dt, const glm::vec3& playerPos, float gameTime, ParticleSystem& particles) {
-    if (state_ == AntoniState::ABSENT) return;
-    
     stateTimer_ += dt;
-    
     switch (state_) {
-        case AntoniState::MATERIALIZING:
-            visibility_ = std::min(1.0f, stateTimer_ / 2.0f);
-            if (stateTimer_ >= 2.0f) TransitionTo(AntoniState::INSPECTING);
-            break;
-        case AntoniState::INSPECTING:
-            if (stateTimer_ >= 3.0f) TransitionTo(AntoniState::IDLE_THREAT);
-            break;
         case AntoniState::CHASING:
             UpdateChase(dt, playerPos);
             break;
-        case AntoniState::KIDNAPPING:
-            pos_ += glm::vec3(0, 0, -1) * dt * 2.0f;
-            if (stateTimer_ > 3.0f) TransitionTo(AntoniState::ABSENT);
+        case AntoniState::DISGUISED:
+            // Just stand still like a customer
+            break;
+        case AntoniState::AMBUSHING:
+            if (glm::distance(pos_, playerPos) < 3.0f) {
+                TransitionTo(AntoniState::CHASING);
+            }
             break;
         default: break;
     }
-    
     ComputeMatrix(gameTime);
 }
 
 void AntoniAI::Draw(const Shader& shader, const glm::mat4& view, const glm::mat4& proj) {
     if (state_ == AntoniState::ABSENT) return;
     shader.Use();
-    shader.SetMat4("model", modelMatrix_);
     shader.SetMat4("view", view);
     shader.SetMat4("projection", proj);
+    shader.SetMat4("model", modelMatrix_);
     shader.SetFloat("visibility", visibility_);
     model_->Draw(shader);
 }
 
 void AntoniAI::Materialize(glm::vec3 position) {
     pos_ = position;
-    stateTimer_ = 0;
+    visibility_ = 1.0f;
     TransitionTo(AntoniState::MATERIALIZING);
 }
 
 void AntoniAI::BeginKidnap(glm::vec3 victimPos) {
-    pos_ = victimPos + glm::vec3(0, 0, 0.5f);
+    targetPos_ = victimPos;
     TransitionTo(AntoniState::KIDNAPPING);
+}
+
+void AntoniAI::BeginOilThrow(glm::vec3 centerPos) {
+    pos_ = centerPos;
+    TransitionTo(AntoniState::THROWING_OIL);
 }
 
 void AntoniAI::BeginChase(glm::vec3 playerPos) {
     TransitionTo(AntoniState::CHASING);
 }
 
+void AntoniAI::SetDisguised(bool disguised) {
+    isDisguised_ = disguised;
+    if (disguised) TransitionTo(AntoniState::DISGUISED);
+}
+
+void AntoniAI::SetAmbush(bool ambush, glm::vec3 pos) {
+    if (ambush) {
+        pos_ = pos;
+        TransitionTo(AntoniState::AMBUSHING);
+    }
+}
+
 void AntoniAI::Reset() {
-    TransitionTo(AntoniState::ABSENT);
+    state_ = AntoniState::ABSENT;
+    visibility_ = 0.0f;
 }
 
 bool AntoniAI::CaughtPlayer(const glm::vec3& playerPos) const {
-    return state_ == AntoniState::CHASING && glm::distance(pos_, playerPos) < 1.2f;
+    return state_ == AntoniState::CHASING && glm::distance(pos_, playerPos) < 1.0f;
 }
 
 float AntoniAI::DistanceTo(const glm::vec3& p) const {
@@ -80,22 +88,17 @@ float AntoniAI::DistanceTo(const glm::vec3& p) const {
 }
 
 void AntoniAI::UpdateChase(float dt, const glm::vec3& playerPos) {
-    glm::vec3 dir = playerPos - pos_;
-    dir.y = 0;
-    if (glm::length(dir) > 0.1f) {
-        dir = glm::normalize(dir);
-        pos_ += dir * chaseSpeed_ * dt;
-    }
+    glm::vec3 dir = glm::normalize(playerPos - pos_);
+    pos_ += dir * chaseSpeed_ * dt;
 }
 
 void AntoniAI::ComputeMatrix(float time) {
     modelMatrix_ = glm::translate(glm::mat4(1.0f), pos_);
-    modelMatrix_ = glm::scale(modelMatrix_, glm::vec3(1.2f, 1.4f, 1.2f));
 }
 
 void AntoniAI::TransitionTo(AntoniState s) {
     state_ = s;
-    stateTimer_ = 0;
+    stateTimer_ = 0.0f;
 }
 
 glm::vec3 AntoniAI::NavigateTo(const glm::vec3& target, float dt) {

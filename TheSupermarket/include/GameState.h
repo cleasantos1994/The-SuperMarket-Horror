@@ -47,6 +47,7 @@ struct GameStateData {
     int        day1TasksDone   = 0;
     int        day5TasksDone   = 0;
     bool       hasCarKeys      = false;
+    bool       hasPistol       = false;
     bool       antoniFocusedOnPlayer = false;
 
     // Fear / chase state

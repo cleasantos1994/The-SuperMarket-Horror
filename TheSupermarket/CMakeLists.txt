@@ -7,17 +7,14 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 include(FetchContent)
 
-# GLFW
-find_package(glfw3 QUIET)
-if(NOT glfw3_FOUND)
-    FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.3.9)
-    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(glfw)
-    set(GLFW_LIBRARIES glfw)
+# SDL2
+find_package(SDL2 QUIET)
+if(NOT SDL2_FOUND)
+    FetchContent_Declare(SDL2 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git GIT_TAG release-2.28.x)
+    FetchContent_MakeAvailable(SDL2)
+    set(SDL2_LIBRARIES SDL2::SDL2)
 else()
-    set(GLFW_LIBRARIES glfw)
+    set(SDL2_LIBRARIES SDL2::SDL2)
 endif()
 
 # GLAD
@@ -27,7 +24,7 @@ FetchContent_MakeAvailable(glad)
 # GLM
 find_package(glm QUIET)
 if(NOT glm_FOUND)
-    FetchContent_Declare(glm GIT_REPOSITORY https://github.com/g-truc/glm.git GIT_TAG 0.9.9.8)
+    FetchContent_Declare(glm GIT_REPOSITORY https://github.com/g-truc/glm.git GIT_TAG 1.0.1)
     FetchContent_MakeAvailable(glm)
 endif()
 
@@ -61,17 +58,17 @@ if(NOT nlohmann_json_FOUND)
 endif()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-add_executable(MarketHorror_Antoni ${SOURCES})
+add_executable(TheSupermarket ${SOURCES})
 
-target_include_directories(MarketHorror_Antoni PRIVATE
+target_include_directories(TheSupermarket PRIVATE
   ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/extern/miniaudio
   ${stb_SOURCE_DIR}
   ${glad_SOURCE_DIR}/include)
 
-target_link_libraries(MarketHorror_Antoni PRIVATE
-  ${GLFW_LIBRARIES} glad glm assimp nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS})
+target_link_libraries(TheSupermarket PRIVATE
+  ${SDL2_LIBRARIES} glad glm assimp nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS})
 
-add_custom_command(TARGET MarketHorror_Antoni POST_BUILD
+add_custom_command(TARGET TheSupermarket POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:MarketHorror_Antoni>/assets)
+    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:TheSupermarket>/assets)

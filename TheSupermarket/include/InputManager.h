@@ -1,6 +1,7 @@
 #pragma once
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 #include <glm/glm.hpp>
+#include <map>
 
 class InputManager {
 public:
@@ -9,12 +10,12 @@ public:
         return instance;
     }
 
-    void Init(GLFWwindow* window);
-    void PollEvents();
+    void Init();
+    void PollEvents(bool& quit);
     void EndFrame();
 
-    bool IsKeyPressed(int key) const;
-    bool IsMouseButtonPressed(int button) const;
+    bool IsKeyPressed(SDL_Scancode key) const;
+    bool IsMouseButtonPressed(uint8_t button) const;
     glm::vec2 MousePosition() const { return mousePos_; }
     glm::vec2 MouseDelta() const { return mouseDelta_; }
 
@@ -30,8 +31,10 @@ public:
 
 private:
     InputManager() = default;
-    GLFWwindow* window_ = nullptr;
     glm::vec2   mousePos_{0};
     glm::vec2   mouseDelta_{0};
     bool        firstMouse_ = true;
+    const uint8_t* keyboardState_ = nullptr;
+    uint32_t mouseState_ = 0;
+    std::map<SDL_Scancode, bool> prevKeyboardState_;
 };

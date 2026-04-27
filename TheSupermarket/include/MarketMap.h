@@ -41,22 +41,32 @@ public:
     glm::vec3                      GetCarPos()             const;
     glm::vec3                      GetAntoniSpawnPos()     const;
     glm::vec3                      GetBackRoomDoorPos()    const;
+    glm::vec3                      GetFrozenSectionPos()   const;
+    glm::vec3                      GetTVPos()              const;
+    glm::vec3                      GetSecretDoorPos()      const;
+    glm::vec3                      GetBillboardPos()       const;
 
     void AddOilPuddle(glm::vec3 pos, float radius = 1.5f);
     bool PlayerInOilPuddle(const glm::vec3& playerPos) const;
     void DropPoopDecal(glm::vec3 pos);
     void OpenExitDoor();
+    void OpenSecretDoor();
+    void SetLightsOut(bool off);
 
     const std::vector<MarketZone>& GetZones() const { return zones_; }
 
 private:
     unsigned int floorTexID_, wallTexID_, shelfTexID_, poopDecalTexID_, oilTexID_;
-    unsigned int floorVAO_, wallVAO_, shelfVAO_;
+    unsigned int floorVAO_, wallVAO_, shelfVAO_, frozenVAO_, parkingVAO_, billboardVAO_;
     std::vector<AABB>        colliders_;
     std::vector<MarketZone>  zones_;
     std::vector<OilPuddle>   oilPuddles_;
     bool                     exitDoorOpen_ = false;
     float                    exitDoorAngle_= 0.0f;
+    bool                     secretDoorOpen_ = false;
+    float                    secretDoorAngle_= 0.0f;
+    bool                     lightsOut_ = false;
+    int                      billboardNumber_ = 0;
 
     void BuildFloor();
     void BuildWalls();

@@ -1,5 +1,5 @@
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -26,26 +26,37 @@ static constexpr float FEAR_REGEN   = 0.3f;
 
 static float sceneTimer = 0.0f;
 
-void FramebufferSizeCallback(GLFWwindow*, int w, int h) {
-    glViewport(0, 0, w, h);
-}
-
-int main() {
-    if (!glfwInit()) return -1;
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* win = glfwCreateWindow(W, H, "MARKET HORROR: THE LEGEND OF ANTONI", nullptr, nullptr);
-    if (!win) {
-        glfwTerminate();
+int main(int argc, char* argv[]) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
+        std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
         return -1;
     }
-    glfwMakeContextCurrent(win);
-    glfwSetFramebufferSizeCallback(win, FramebufferSizeCallback);
-    glfwSwapInterval(1);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return -1;
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    SDL_Window* window = SDL_CreateWindow("THE SUPERMARKET", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    if (!window) {
+        std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return -1;
+    }
+
+    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    if (!glContext) {
+        std::cerr << "OpenGL context could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
+
+    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -55,7 +66,7 @@ int main() {
     auto& audio  = AudioManager::Get();
     auto& input  = InputManager::Get();
     audio.Init();
-    input.Init(win);
+    input.Init();
     SaveLoad::LoadSettings(state);
 
     UIRenderer    ui;    ui.Init(W, H);
@@ -71,17 +82,18 @@ int main() {
     ParticleSystem* particles= nullptr;
     Shader*        worldShader=nullptr;
 
-    float prevTime = (float)glfwGetTime();
+    float prevTime = (float)SDL_GetTicks() / 1000.0f;
+    bool quit = false;
 
-    while (!glfwWindowShouldClose(win)) {
-        float now = (float)glfwGetTime();
+    while (!quit) {
+        float now = (float)SDL_GetTicks() / 1000.0f;
         float dt  = glm::clamp(now - prevTime, 0.0f, 0.1f);
         prevTime  = now;
 
-        input.PollEvents();
+        input.PollEvents(quit);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (input.IsKeyPressed(GLFW_KEY_ESCAPE)) {
+        if (input.IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
             if (state.currentScene == GameScene::GAMEPLAY_DAY1  ||
                 state.currentScene == GameScene::GAMEPLAY_DAY5  ||
                 state.currentScene == GameScene::GAMEPLAY_CHASE) {
@@ -149,7 +161,7 @@ int main() {
                 } else if (hovered == 2) {
                     GameStateMachine::Get().TransitionTo(GameScene::SETTINGS);
                 } else if (hovered == 3) {
-                    glfwSetWindowShouldClose(win, true);
+                    quit = true;
                 }
             }
             ui.DrawMainMenu(hovered);
@@ -198,6 +210,15 @@ int main() {
 
                 tasks->Update(cam->Position(), input.Interact());
                 events->Update(dt);
+
+                if (state.currentScene == GameScene::GAMEPLAY_DAY1 && glm::distance(cam->Position(), market->GetTVPos()) < 2.0f && input.Interact()) {
+                    market->SetLightsOut(true);
+                    audio.PlaySFX(AudioManager::SFX_CLICK);
+                }
+
+                if (state.antoniChasing && glm::distance(cam->Position(), market->GetFrozenSectionPos()) < 3.0f) {
+                    market->OpenSecretDoor();
+                }
 
                 worldShader->Use();
                 worldShader->SetMat4("view", cam->GetViewMatrix());
@@ -371,8 +392,7 @@ int main() {
         default: break;
         }
 
-        glfwSwapBuffers(win);
-        glfwPollEvents();
+        SDL_GL_SwapWindow(window);
     }
 
     audio.Shutdown();
@@ -380,7 +400,8 @@ int main() {
     delete customer1; delete customer2;
     delete tasks; delete events; delete particles; delete worldShader;
     ui.Shutdown();
-    glfwDestroyWindow(win);
-    glfwTerminate();
+    SDL_GL_DeleteContext(glContext);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     return 0;
 }

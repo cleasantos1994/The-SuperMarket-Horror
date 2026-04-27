@@ -21,7 +21,8 @@ enum class CustomerState {
     PRE_INCIDENT,
     INCIDENT,
     BEING_KIDNAPPED,
-    GONE
+    GONE,
+    GHOSTLY
 };
 
 class CustomerAI {
@@ -35,6 +36,7 @@ public:
               const glm::mat4& view, const glm::mat4& proj);
     void TriggerIncident();
     void BeginKidnap();
+    void SetGhostly(bool ghostly);
 
     CustomerType   Type()   const { return type_; }
     CustomerState  State()  const { return state_; }
@@ -49,6 +51,7 @@ private:
     glm::vec3      targetPos_;
     glm::mat4      modelMatrix_;
     bool           hasPooped_      = false;
+    bool           isGhostly_      = false;
     float          stateTimer_     = 0.0f;
     float          walkSpeed_      = 1.2f;
     float          squatPhase_     = 0.0f;
