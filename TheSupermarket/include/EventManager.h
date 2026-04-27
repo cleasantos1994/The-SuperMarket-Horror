@@ -27,7 +27,7 @@ public:
     void RegisterSecretEvents(class AntoniAI& a, class CustomerAI& c1,
                               class CustomerAI& c2, class CustomerAI& c3,
                               class MarketMap& map, class AudioManager& audio,
-                              class GameStateMachine& gsm);
+                              class GameStateMachine& gsm, class Camera& cam);
 
 private:
     std::vector<StoryEvent> events_;

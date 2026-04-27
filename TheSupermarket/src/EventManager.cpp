@@ -4,6 +4,8 @@
 #include "MarketMap.h"
 #include "AudioManager.h"
 #include "GameState.h"
+#include "Camera.h"
+#include "InputManager.h"
 
 void EventManager::RegisterEvent(StoryEvent event) {
     events_.push_back(event);
@@ -16,7 +18,7 @@ void EventManager::Update(float dt) {
             e.fired = true;
             if (e.blocking) {
                 blocking_ = true;
-                blockTimer_ = 3.0f; // Typical block duration
+                blockTimer_ = 3.0f; 
             }
         }
     }
@@ -37,22 +39,21 @@ void EventManager::RegisterDay5Events(AntoniAI& a, CustomerAI& c, MarketMap& map
     // Day 5 events
 }
 
-void EventManager::RegisterSecretEvents(AntoniAI& a, CustomerAI& c1, CustomerAI& c2, CustomerAI& c3, MarketMap& map, AudioManager& audio, GameStateMachine& gsm) {
+void EventManager::RegisterSecretEvents(AntoniAI& a, CustomerAI& c1, CustomerAI& c2, CustomerAI& c3, MarketMap& map, AudioManager& audio, GameStateMachine& gsm, Camera& cam) {
     // 1. Shooting Antoni
     RegisterEvent({"SHOOT_ANTONI", 
         [&](){ return gsm.Data().antoniChasing && gsm.Data().hasPistol && InputManager::Get().IsMouseButtonPressed(1); },
         [&](){ 
             audio.PlaySFX("assets/audio/sfx_gunshot.wav");
-            a.Reset(); // Or trigger damage state
+            a.Reset(); 
             gsm.Data().antoniChasing = false;
         }
     });
 
     // 2. Calling the Police
     RegisterEvent({"CALL_POLICE",
-        [&](){ return !gsm.Data().antoniChasing && glm::distance(Camera::Get().Position(), map.GetBillboardPos()) < 5.0f; },
+        [&](){ return !gsm.Data().antoniChasing && glm::distance(cam.Position(), map.GetBillboardPos()) < 5.0f; },
         [&](){
-            // Trigger final cutscene
             gsm.TransitionTo(GameScene::WIN_SCREEN);
         }
     });
