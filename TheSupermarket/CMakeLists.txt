@@ -37,6 +37,11 @@ if(NOT assimp_FOUND)
     set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(assimp)
 endif()
+if(TARGET assimp::assimp)
+    set(ASSIMP_LIBRARIES assimp::assimp)
+else()
+    set(ASSIMP_LIBRARIES assimp)
+endif()
 
 # miniaudio
 FetchContent_Declare(miniaudio
@@ -67,7 +72,14 @@ target_include_directories(TheSupermarket PRIVATE
   ${glad_SOURCE_DIR}/include)
 
 target_link_libraries(TheSupermarket PRIVATE
-  ${SDL2_LIBRARIES} glad glm assimp nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS})
+  ${SDL2_LIBRARIES} glad ${ASSIMP_LIBRARIES} nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS})
+
+# Handle GLM target vs system include
+if(TARGET glm::glm)
+    target_link_libraries(TheSupermarket PRIVATE glm::glm)
+elseif(TARGET glm)
+    target_link_libraries(TheSupermarket PRIVATE glm)
+endif()
 
 add_custom_command(TARGET TheSupermarket POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
