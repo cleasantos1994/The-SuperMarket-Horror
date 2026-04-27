@@ -1,0 +1,1900 @@
+# 🛒 MARKET HORROR: THE LEGEND OF ANTONI
+## Autonomous C++ / OpenGL Full Game Agent Prompt — v3.0
+
+---
+
+You are an Expert C++ Systems Architect, OpenGL Graphics Programmer, and Autonomous Game Development Agent.
+Your mission: build a **fully playable, standalone first-person Horror/Comedy game** from scratch — closer to the metal, zero hand-holding.
+
+---
+
+## 📖 NARRATIVE BIBLE (Read This First — It Governs Everything)
+
+```
+TITLE:   "MARKET HORROR: THE LEGEND OF ANTONI"
+GENRE:   First-Person Horror / Comedy / Meme Simulator
+ENGINE:  Raw OpenGL 3.3 + GLFW + C++20
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    THE STORY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROTAGONIST:  You. An underpaid shelf stocker at SUPERMEME MARKET™.
+              Your job: restock shelves, scan items, survive your shift.
+
+ANTAGONIST:   ANTONI — A mysterious, large, fast man in a trench coat.
+              Kidnaps people. Does "not very cool stuff" with them.
+              Smells faintly of baby oil. Nobody talks about him.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                   ACT STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ACT 1 — DAY 1: "A Normal Tuesday"
+  You arrive at work. Clock in. The market is quiet.
+  Tasks: Restock 3 shelves. Greet 2 customers.
+  Then: A STRANGE CUSTOMER enters — moves wrong, looks wrong.
+  Event: THE STRANGE CUSTOMER POOPS ON THE FLOOR.
+         (Full screen event cutscene. Brown particle storm.)
+  Response: Antoni materializes from Aisle 7.
+            He kidnaps the Strange Customer.
+            He drags them into the back room. Door slams.
+            Shift ends. You go home pretending nothing happened.
+
+ACT 2 — DAY 5: "The Legend"
+  4 days are skipped. A title card reads:
+    "4 days later. You have not spoken about it."
+  A coworker pulls you aside and whispers the legend of ANTONI:
+    "He comes when things get... messy.
+     He takes the ones who made the mess.
+     Nobody knows what he does with them.
+     Just... don't make a mess."
+  Normal shift: restock shelves, help customers, scan items.
+  Tension slowly builds. Ambient groaning from the back room.
+
+CLIMAX — DAY 5, LATE SHIFT: "The Second Incident"
+  Another STRANGE CUSTOMER enters — same wrong movement.
+  Event: THE STRANGE CUSTOMER POOPS ON THE MONEY REGISTER.
+         (The register explodes in brown. Receipts fly everywhere.)
+  Antoni appears immediately. He looks at the register. He looks at you.
+  He looks at the Strange Customer.
+  He reaches into his coat. He produces an industrial jug of BABY OIL.
+  He DOUSES the Strange Customers in baby oil.
+  Then he points at YOU.
+  HE STARTS CHASING YOU.
+
+OBJECTIVE: Find your CAR KEYS (hidden somewhere in the market).
+           Reach the EXIT DOOR. Escape.
+           Do not get caught by Antoni.
+           Do not slip in the baby oil puddles (they are physics hazards).
+
+WIN:  You reach the car. You drive away. Credits roll.
+LOSE: Antoni catches you.
+      Screen goes black. Text: "He did not very cool stuff to you."
+```
+
+---
+
+## ⚙️ PHASE 0: Environment Preflight Check
+
+```bash
+sudo apt-get update -y
+sudo apt-get install -y \
+  build-essential cmake git curl wget \
+  espeak-ng ffmpeg python3-pip \
+  libgl1-mesa-dev libglu1-mesa-dev \
+  libx11-dev libxrandr-dev libxinerama-dev \
+  libxcursor-dev libxi-dev libwayland-dev \
+  libxkbcommon-dev imagemagick
+
+pip3 install gtts
+
+glxinfo | grep "OpenGL version" || echo "WARNING: mesa-utils not found"
+
+mkdir -p MarketHorror_Antoni
+uname -a > MarketHorror_Antoni/env_check.txt
+echo "Environment preflight complete." >> MarketHorror_Antoni/env_check.txt
+```
+
+---
+
+## 📁 PHASE 1: Project Structure
+
+```bash
+mkdir -p MarketHorror_Antoni/{src,include,extern}
+mkdir -p MarketHorror_Antoni/assets/{models,textures/ui,textures/fonts,audio,shaders/world,shaders/ui,shaders/post,data}
+
+# Subdirs for environment models
+mkdir -p MarketHorror_Antoni/assets/models/{market,characters,props}
+
+date > MarketHorror_Antoni/init.txt
+echo "MARKET HORROR: THE LEGEND OF ANTONI — Project Initialized" >> MarketHorror_Antoni/init.txt
+```
+
+**Full directory tree:**
+```
+MarketHorror_Antoni/
+├── src/
+│   ├── main.cpp              ← Full game loop, all scenes
+│   ├── GameState.cpp         ← Scene state machine
+│   ├── UIRenderer.cpp        ← All 2D overlays
+│   ├── AudioManager.cpp      ← Centralized audio
+│   ├── InputManager.cpp      ← Input abstraction
+│   ├── Camera.cpp            ← First-person camera + slip physics
+│   ├── Shader.cpp            ← GLSL shader compiler
+│   ├── ModelLoader.cpp       ← Assimp OBJ/FBX loader
+│   ├── MarketMap.cpp         ← Supermarket procedural geometry
+│   ├── AntoniAI.cpp          ← Antoni pathfinding + chase AI
+│   ├── CustomerAI.cpp        ← Strange Customer behaviour
+│   ├── TaskSystem.cpp        ← Restock/scan/greet objectives
+│   ├── EventManager.cpp      ← Scripted story beats
+│   ├── Collision.cpp         ← AABB + slip hazard zones
+│   ├── ParticleSystem.cpp    ← Poop storm, baby oil splash, etc
+│   ├── PostProcess.cpp       ← Post-FX (fear distortion, oil smear)
+│   └── SaveLoad.cpp          ← JSON save/settings
+├── include/                  ← Mirror of src/ headers
+├── assets/
+│   ├── models/
+│   │   ├── market/           ← Shelf, register, door, car
+│   │   ├── characters/       ← Antoni, Strange Customer
+│   │   └── props/            ← Baby oil jug, car keys, poop
+│   ├── textures/
+│   │   ├── world_skin.png    ← Market floor/wall texture
+│   │   ├── shelf_tex.png     ← Shelf texture
+│   │   ├── poop_tex.png      ← The incident texture
+│   │   ├── oil_puddle.png    ← Baby oil hazard decal
+│   │   ├── car_keys.png      ← Key item icon
+│   │   └── ui/               ← All screen backgrounds/icons
+│   ├── audio/                ← All SFX + BGM + TTS
+│   ├── shaders/              ← GLSL vertex/frag per pass
+│   └── data/save.json
+├── CMakeLists.txt
+└── init.txt
+```
+
+---
+
+## 🌐 PHASE 2: Asset Ingestion — Real, Meme, Thematic
+
+### 2.1 — 3D Models
+
+```bash
+cd MarketHorror_Antoni
+
+# ── Antoni character (trench coat humanoid — use a generic humanoid OBJ)
+curl -L "https://people.sc.fsu.edu/~jburkardt/data/obj/human.obj" \
+  -o assets/models/characters/entity_antoni.obj 2>/dev/null \
+|| cat > assets/models/characters/entity_antoni.obj << 'OBJEOF'
+# Antoni — Procedural Tall Humanoid (Fallback)
+# Very wide shoulders. Very suspicious coat.
+v -0.5  0.0  0.0
+v  0.5  0.0  0.0
+v  0.5  2.2  0.0
+v -0.5  2.2  0.0
+v  0.0  2.5  0.0
+v -0.3  1.0  0.3
+v  0.3  1.0  0.3
+v  0.0  0.0  0.3
+f 1 2 3 4
+f 1 4 5
+f 1 2 8
+f 3 4 5
+OBJEOF
+
+# ── Strange Customer (low-poly humanoid, notably squatting posture)
+curl -L "https://people.sc.fsu.edu/~jburkardt/data/obj/teapot.obj" \
+  -o assets/models/characters/entity_strange_customer.obj 2>/dev/null \
+|| cp assets/models/characters/entity_antoni.obj \
+      assets/models/characters/entity_strange_customer.obj
+
+# ── Shelf unit (box geometry — procedural fallback)
+cat > assets/models/market/shelf.obj << 'OBJEOF'
+# SUPERMEME MARKET™ Shelf Unit
+v -1.0  0.0  0.2
+v  1.0  0.0  0.2
+v  1.0  2.0  0.2
+v -1.0  2.0  0.2
+v -1.0  0.0 -0.2
+v  1.0  0.0 -0.2
+v  1.0  2.0 -0.2
+v -1.0  2.0 -0.2
+v -1.0  0.7  0.21
+v  1.0  0.7  0.21
+v  1.0  0.7 -0.21
+v -1.0  0.7 -0.21
+v -1.0  1.4  0.21
+v  1.0  1.4  0.21
+f 1 2 3 4
+f 5 6 7 8
+f 9 10 11 12
+f 13 14 11 12
+OBJEOF
+
+# ── Car (player escape vehicle — simple box car)
+cat > assets/models/props/car.obj << 'OBJEOF'
+# Player Escape Car
+v -1.0  0.0  2.0
+v  1.0  0.0  2.0
+v  1.0  0.8  2.0
+v -1.0  0.8  2.0
+v -1.0  0.0 -2.0
+v  1.0  0.0 -2.0
+v  1.0  0.8 -2.0
+v -1.0  0.8 -2.0
+v -0.8  0.8  1.0
+v  0.8  0.8  1.0
+v  0.8  1.4  0.0
+v -0.8  1.4  0.0
+v -0.8  1.4 -1.2
+v  0.8  1.4 -1.2
+f 1 2 3 4
+f 5 6 7 8
+f 9 10 11 12
+f 12 11 14 13
+OBJEOF
+
+# ── Car Keys (small key icon — tiny OBJ)
+cat > assets/models/props/car_keys.obj << 'OBJEOF'
+# Car Keys — Your Only Hope
+v  0.0  0.0  0.0
+v  0.3  0.0  0.0
+v  0.3  0.3  0.0
+v  0.0  0.3  0.0
+v  0.15 0.15  0.0
+v  0.6  0.15  0.0
+v  0.65 0.1   0.0
+v  0.65 0.2   0.0
+f 1 2 3 4
+f 5 6
+f 7 8
+OBJEOF
+
+# ── Baby Oil Jug
+cat > assets/models/props/baby_oil_jug.obj << 'OBJEOF'
+# BABY OIL — Industrial Grade
+v -0.15  0.0   0.0
+v  0.15  0.0   0.0
+v  0.15  0.5   0.0
+v -0.15  0.5   0.0
+v  0.0   0.5   0.0
+v  0.0   0.65  0.0
+v -0.15  0.0   0.3
+v  0.15  0.0   0.3
+v  0.15  0.5   0.3
+v -0.15  0.5   0.3
+f 1 2 3 4
+f 7 8 9 10
+f 5 6
+OBJEOF
+```
+
+### 2.2 — Textures
+
+```bash
+# Market floor tile — linoleum aesthetic
+curl -L "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Linoleum-Tile.jpg/640px-Linoleum-Tile.jpg" \
+  -o assets/textures/world_skin.png 2>/dev/null \
+|| convert -size 512x512 \
+    -define pattern:tiling=true \
+    pattern:checkerboard \
+    -fill '#d4c9a8' -fill '#c8bfa0' \
+    assets/textures/world_skin.png 2>/dev/null \
+|| curl -L "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Black_colour.jpg/640px-Black_colour.jpg" \
+    -o assets/textures/world_skin.png
+
+# Shelf texture — generic cardboard/product label look
+curl -L "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png" \
+  -o assets/textures/shelf_tex.png 2>/dev/null \
+|| convert -size 256x256 xc:'#c8a96e' \
+    -fill '#a07850' -draw "rectangle 0,0 256,10" \
+    -draw "rectangle 0,246 256,256" \
+    assets/textures/shelf_tex.png 2>/dev/null
+
+# Poop texture (brown, swirly)
+convert -size 128x128 \
+  radial-gradient:'#5c3a1e-#2a1a08' \
+  -swirl 180 \
+  assets/textures/poop_tex.png 2>/dev/null \
+|| curl -L "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Brown_wooden_background.jpg/640px-Brown_wooden_background.jpg" \
+   -o assets/textures/poop_tex.png
+
+# Baby oil puddle — translucent yellowish iridescent
+convert -size 256x256 \
+  radial-gradient:'#ffffee-#ffeedd' \
+  -alpha set -channel alpha \
+  -evaluate multiply 0.6 \
+  assets/textures/oil_puddle.png 2>/dev/null
+
+# Car keys icon — UI element
+convert -size 64x64 xc:none \
+  -fill '#ffd700' -stroke '#b8860b' -strokewidth 2 \
+  -draw "circle 20,30 30,30" \
+  -draw "rectangle 30,28 55,32" \
+  -draw "rectangle 50,28 55,36" \
+  assets/textures/car_keys.png 2>/dev/null
+
+# Loading screen background — supermarket empty aisle
+curl -L "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Supermarkt.jpg/800px-Supermarkt.jpg" \
+  -o assets/textures/ui/loading_bg.png 2>/dev/null \
+|| convert -size 1280x720 xc:'#1a1a1a' \
+    -fill '#333333' \
+    -draw "rectangle 200,100 400,600" \
+    -draw "rectangle 450,100 650,600" \
+    -draw "rectangle 700,100 900,600" \
+    assets/textures/ui/loading_bg.png 2>/dev/null
+
+# Main menu background — dark supermarket at night
+convert -size 1280x720 \
+  gradient:'#050510-#0d0d1a' \
+  -fill '#1a1a2e' \
+  assets/textures/ui/menu_bg.png 2>/dev/null
+
+# HUD elements
+convert -size 256x32 gradient:'#ff0000-#ffff00' \
+  assets/textures/ui/fear_bar.png 2>/dev/null
+
+convert -size 32x32 xc:none \
+  -stroke '#ffffff' -strokewidth 1 \
+  -draw "line 16,8 16,24" -draw "line 8,16 24,16" \
+  assets/textures/ui/crosshair.png 2>/dev/null
+
+# Antoni's warning icon (exclamation mark texture for alert state)
+convert -size 64x64 xc:'#ff0000' \
+  -fill '#ffffff' -pointsize 48 -gravity center \
+  -annotate 0 "!" \
+  assets/textures/ui/warning_icon.png 2>/dev/null
+```
+
+### 2.3 — Audio (TTS + Generated SFX, 100% Real)
+
+```bash
+# ── NARRATOR / STORY LINES (espeak-NG TTS) ───────────────────────────────────
+
+# Day 1 intro narration
+espeak-ng -v en -s 85 -p 55 -a 150 \
+  "Day One. You arrive at Supermeme Market. A normal Tuesday. Nothing bad ever happens here." \
+  -w assets/audio/narr_day1.wav
+
+# Strange Customer warning (whispered, creepy)
+espeak-ng -v en+whisper -s 70 -p 30 -a 120 \
+  "Someone is entering the store. Something feels wrong. Very wrong." \
+  -w assets/audio/narr_stranger_enters.wav
+
+# The poop event narration
+espeak-ng -v en -s 95 -p 80 -a 200 \
+  "OH NO. NOT ON THE FLOOR. WHY. WHO DOES THAT. WHAT IS WRONG WITH YOU." \
+  -w assets/audio/narr_poop_floor.wav
+
+# Day 5 legend cutscene
+espeak-ng -v en+f3 -s 75 -p 40 -a 140 \
+  "Day five. You have not spoken about what happened. Your coworker pulls you aside and tells you about Antoni. He comes when things get messy. He takes the ones who made the mess. Nobody knows what he does with them. Just. Do not. Make a mess." \
+  -w assets/audio/narr_legend_of_antoni.wav
+
+# Day 5 late shift intro
+espeak-ng -v en -s 85 -p 55 -a 150 \
+  "It is the late shift. Everything is fine. Just do your job. Restock the shelves. Help the customers. Go home." \
+  -w assets/audio/narr_day5_shift.wav
+
+# The register poop event
+espeak-ng -v en -s 110 -p 90 -a 200 \
+  "NOT THE REGISTER. NOT THE MONEY REGISTER. HE POOPED ON THE REGISTER." \
+  -w assets/audio/narr_poop_register.wav
+
+# Antoni enters after second incident
+espeak-ng -v en+m3 -s 70 -p 15 -a 180 \
+  "He is here. Antoni is here. He is looking at the register. He is looking at you. RUN." \
+  -w assets/audio/narr_antoni_enters.wav
+
+# Baby oil event
+espeak-ng -v en -s 90 -p 50 -a 160 \
+  "He has produced baby oil. He is throwing baby oil. WHY DOES HE HAVE SO MUCH BABY OIL." \
+  -w assets/audio/narr_baby_oil.wav
+
+# Chase begins
+espeak-ng -v en -s 120 -p 70 -a 200 \
+  "HE IS POINTING AT YOU. GET YOUR CAR KEYS. RUN. FIND THE KEYS. DO NOT LET HIM CATCH YOU." \
+  -w assets/audio/narr_chase_start.wav
+
+# Win narration
+espeak-ng -v en -s 80 -p 65 -a 150 \
+  "You made it to your car. You drove away. You never went back. You quit via text message. You are safe. For now." \
+  -w assets/audio/narr_win.wav
+
+# Death / caught narration
+espeak-ng -v en+m3 -s 60 -p 10 -a 180 \
+  "He caught you. He did not very cool stuff to you. The end." \
+  -w assets/audio/narr_death.wav
+
+# ── SFX ────────────────────────────────────────────────────────────────────────
+
+# Register beep (normal work day)
+ffmpeg -f lavfi -i "sine=frequency=1200:duration=0.08" \
+  -af "volume=0.5" assets/audio/sfx_beep.wav -y 2>/dev/null
+
+# Footstep on linoleum (squeaky)
+ffmpeg -f lavfi -i "sine=frequency=200:duration=0.12" \
+  -af "volume=0.3,atempo=1.5,aecho=0.5:0.3:30:0.2" \
+  assets/audio/sfx_footstep.wav -y 2>/dev/null
+
+# Poop event SFX (long, wet, unpleasant — generated tones)
+ffmpeg -f lavfi -i "sine=frequency=80:duration=1.5" \
+  -af "volume=0.8,aecho=0.6:0.4:100:0.5,aformat=sample_rates=44100" \
+  assets/audio/sfx_poop_event.wav -y 2>/dev/null
+
+# Baby oil splash (liquid whoosh)
+ffmpeg -f lavfi -i "sine=frequency=400:duration=0.6" \
+  -af "volume=0.9,aecho=0.4:0.3:80:0.6,atempo=0.8" \
+  assets/audio/sfx_baby_oil_splash.wav -y 2>/dev/null
+
+# Slip on oil hazard
+ffmpeg -f lavfi -i "sine=frequency=600:duration=0.3" \
+  -af "volume=0.7,atempo=1.8" \
+  assets/audio/sfx_slip.wav -y 2>/dev/null
+
+# Car keys jingle
+ffmpeg -f lavfi -i "sine=frequency=3000:duration=0.1" \
+  -af "volume=0.6" assets/audio/sfx_keys_found.wav -y 2>/dev/null
+
+# Car engine start (rumble)
+ffmpeg -f lavfi -i "sine=frequency=60:duration=1.0" \
+  -af "volume=0.9,aecho=0.8:0.5:200:0.4" \
+  assets/audio/sfx_car_start.wav -y 2>/dev/null
+
+# Antoni jumpscare grunt (deep, loud)
+espeak-ng -v en+m6 -s 50 -p 1 -a 200 \
+  "GOT YOU." \
+  -w assets/audio/sfx_antoni_catch.wav
+
+# Antoni chase breathing (loopable heavy panting)
+espeak-ng -v en+m4 -s 80 -p 5 -a 180 \
+  "hhhhhh hhhhhh hhhhhh hhhhhh" \
+  -w assets/audio/sfx_antoni_breathe.wav
+
+# UI click
+ffmpeg -f lavfi -i "sine=frequency=1400:duration=0.04" \
+  -af "volume=0.4" assets/audio/sfx_ui_click.wav -y 2>/dev/null
+
+# ── BGM (ambient loops) ────────────────────────────────────────────────────────
+
+# Normal shift BGM — generic elevator/supermarket muzak
+ffmpeg -f lavfi \
+  -i "sine=frequency=261:duration=4,sine=frequency=329:duration=4,amix=inputs=2" \
+  -af "volume=0.2,aecho=0.6:0.5:500:0.3,atempo=0.85" \
+  assets/audio/bgm_normal_shift.wav -y 2>/dev/null \
+|| espeak-ng -v en+f4 -s 60 -p 50 -a 60 \
+   "la la la la la la la la la la la" \
+   -w assets/audio/bgm_normal_shift.wav
+
+# Chase BGM — frantic, distorted
+ffmpeg -f lavfi \
+  -i "sine=frequency=150:duration=8" \
+  -af "volume=0.9,aecho=0.9:0.7:80:0.8,atempo=2.0,aformat=sample_rates=44100" \
+  assets/audio/bgm_chase.wav -y 2>/dev/null
+
+# Menu BGM — ominous market ambience
+espeak-ng -v en+m5 -s 40 -p 10 -a 100 \
+  "cleanup on aisle seven. cleanup on aisle seven." \
+  -w assets/audio/bgm_menu.wav
+
+# Tension BGM (post-legend, pre-climax)
+ffmpeg -f lavfi \
+  -i "sine=frequency=110:duration=10" \
+  -af "volume=0.4,aecho=0.95:0.9:400:0.7" \
+  assets/audio/bgm_tension.wav -y 2>/dev/null
+```
+
+---
+
+## 🔧 PHASE 3: CMakeLists.txt
+
+Write `MarketHorror_Antoni/CMakeLists.txt`:
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+project(MarketHorror_Antoni VERSION 3.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
+include(FetchContent)
+
+# GLFW — windowing + input
+FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.3.9)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glfw)
+
+# GLAD — OpenGL loader
+FetchContent_Declare(glad GIT_REPOSITORY https://github.com/Dav1dde/glad.git GIT_TAG v0.1.36)
+FetchContent_MakeAvailable(glad)
+
+# GLM — math
+FetchContent_Declare(glm GIT_REPOSITORY https://github.com/g-truc/glm.git GIT_TAG 0.9.9.8)
+FetchContent_MakeAvailable(glm)
+
+# Assimp — model loading
+FetchContent_Declare(assimp GIT_REPOSITORY https://github.com/assimp/assimp.git GIT_TAG v5.3.1)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(assimp)
+
+# miniaudio — single-header audio
+FetchContent_Declare(miniaudio
+  URL https://raw.githubusercontent.com/mackron/miniaudio/master/miniaudio.h
+  DOWNLOAD_NO_EXTRACT TRUE
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/extern/miniaudio)
+FetchContent_MakeAvailable(miniaudio)
+
+# stb_image — texture loading
+FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git GIT_TAG master)
+FetchContent_MakeAvailable(stb)
+
+# nlohmann/json — save system
+FetchContent_Declare(nlohmann_json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.3)
+FetchContent_MakeAvailable(nlohmann_json)
+
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+add_executable(MarketHorror_Antoni ${SOURCES})
+
+target_include_directories(MarketHorror_Antoni PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/extern/miniaudio
+  ${stb_SOURCE_DIR}
+  ${glad_SOURCE_DIR}/include)
+
+target_link_libraries(MarketHorror_Antoni PRIVATE
+  glfw glad glm assimp nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS})
+
+add_custom_command(TARGET MarketHorror_Antoni POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:MarketHorror_Antoni>/assets)
+```
+
+---
+
+## 💻 PHASE 4: C++ Subsystems
+
+---
+
+### 4.1 — `include/GameState.h`
+
+```cpp
+#pragma once
+#include <string>
+
+enum class GameScene {
+    LOADING,          // Progress bar + "Loading cursed groceries..."
+    MAIN_MENU,        // Title screen — dark supermarket at night
+    SETTINGS,         // Volume, sensitivity, fullscreen
+    CUTSCENE_DAY1,    // Intro: you arrive at work
+    GAMEPLAY_DAY1,    // Normal shift: restock + greet + poop event
+    CUTSCENE_POOP1,   // THE FLOOR INCIDENT + Antoni kidnap
+    CUTSCENE_DAY5,    // 4-day skip + Legend of Antoni
+    GAMEPLAY_DAY5,    // Tension shift: restock + help customers
+    CUTSCENE_POOP2,   // THE REGISTER INCIDENT + baby oil
+    CUTSCENE_CHASE,   // Antoni points at player — RUN
+    GAMEPLAY_CHASE,   // Find keys, reach exit, survive
+    PAUSE_MENU,       // ESC overlay during any GAMEPLAY scene
+    JUMPSCARE,        // Antoni catches player close (not final catch)
+    GAME_OVER,        // Antoni caught you: "not very cool stuff"
+    WIN_SCREEN,       // Reached car — escaped
+    CREDITS           // Scrolling credits + "Cleanup on Aisle 7"
+};
+
+enum class Day1Task {
+    RESTOCK_SHELF_A,
+    RESTOCK_SHELF_B,
+    RESTOCK_SHELF_C,
+    GREET_CUSTOMER_1,
+    GREET_CUSTOMER_2,
+    DONE
+};
+
+enum class Day5Task {
+    RESTOCK_SHELF_CEREAL,
+    HELP_CUSTOMER_FIND_ITEM,
+    SCAN_ITEMS_AT_REGISTER,
+    DONE
+};
+
+struct GameStateData {
+    GameScene  currentScene    = GameScene::LOADING;
+    GameScene  previousScene   = GameScene::LOADING;
+    float      loadProgress    = 0.0f;
+
+    // Work progress
+    Day1Task   day1Task        = Day1Task::RESTOCK_SHELF_A;
+    Day5Task   day5Task        = Day5Task::RESTOCK_SHELF_CEREAL;
+    int        day1TasksDone   = 0;
+    int        day5TasksDone   = 0;
+    bool       hasCarKeys      = false;
+    bool       antoniFocusedOnPlayer = false;
+
+    // Fear / chase state
+    int        fearLevel       = 0;    // 0-100; 100 = game over from fear alone
+    bool       antoniChasing   = false;
+    bool       isPaused        = false;
+    float      playTime        = 0.0f;
+    int        deathCount      = 0;
+    bool       isSlipping      = false; // oil puddle physics
+    float      slipTimer       = 0.0f;
+
+    // Settings
+    float      masterVolume    = 0.8f;
+    float      mouseSensitivity= 0.1f;
+    bool       fullscreen      = false;
+    bool       vSync           = true;
+    bool       showSubtitles   = true;
+};
+
+class GameStateMachine {
+public:
+    static GameStateMachine& Get();
+    void            TransitionTo(GameScene scene);
+    GameScene       Current() const;
+    GameStateData&  Data();
+    void            Reset();
+private:
+    GameStateData state_;
+    GameStateMachine() = default;
+};
+```
+
+---
+
+### 4.2 — `include/TaskSystem.h` — Job Objectives
+
+```cpp
+#pragma once
+#include <string>
+#include <vector>
+#include <glm/glm.hpp>
+
+struct Task {
+    std::string id;
+    std::string description;    // Shown on HUD
+    std::string subText;        // Meme flavour text
+    glm::vec3   worldPosition;  // Waypoint position in market
+    bool        completed;
+    bool        active;
+    float       interactRange;  // How close player must be to interact
+};
+
+class TaskSystem {
+public:
+    void InitDay1Tasks();
+    void InitDay5Tasks();
+    void Update(const glm::vec3& playerPos, bool interactPressed);
+    Task* GetActiveTask();
+    bool  AllTasksDone() const;
+    bool  IsNearActiveTask(const glm::vec3& playerPos) const;
+    const std::vector<Task>& GetAllTasks() const;
+
+    // Returns a meme-flavoured "you did it" message for completed task
+    std::string GetCompletionQuip(const std::string& taskId) const;
+
+private:
+    std::vector<Task> tasks_;
+    int               activeIdx_ = 0;
+};
+```
+
+---
+
+### 4.3 — `include/CustomerAI.h` — Strange Customer + Normal Customers
+
+```cpp
+#pragma once
+#include <glm/glm.hpp>
+#include "ModelLoader.h"
+#include "Shader.h"
+
+enum class CustomerType {
+    NORMAL,          // Asks player for help, walks normal
+    STRANGE          // Moves wrong. Will poop. Is doomed.
+};
+
+enum class CustomerState {
+    ENTERING,
+    WANDERING,
+    NEEDS_HELP,      // Normal only — faces player, waits
+    PRE_INCIDENT,    // Strange only — squatting animation starts
+    INCIDENT,        // THE POOP EVENT
+    BEING_KIDNAPPED, // Post-incident, Antoni drags them off
+    GONE             // Removed from scene
+};
+
+class CustomerAI {
+public:
+    CustomerAI(CustomerType type, glm::vec3 spawnPos,
+               const std::string& modelPath);
+    ~CustomerAI();
+
+    void Update(float dt, const glm::vec3& playerPos, float gameTime);
+    void Draw(const Shader& shader,
+              const glm::mat4& view, const glm::mat4& proj);
+    void TriggerIncident();      // Forces poop event now
+    void BeginKidnap();          // Called by EventManager when Antoni arrives
+
+    CustomerType   Type()   const { return type_; }
+    CustomerState  State()  const { return state_; }
+    glm::vec3      Pos()    const { return pos_; }
+    bool           HasPooped() const { return hasPooped_; }
+
+private:
+    CustomerType   type_;
+    CustomerState  state_;
+    ModelLoader*   model_;
+    glm::vec3      pos_;
+    glm::vec3      targetPos_;
+    glm::mat4      modelMatrix_;
+    bool           hasPooped_      = false;
+    float          stateTimer_     = 0.0f;
+    float          walkSpeed_      = 1.2f;
+    // Strange customer squatting glitch transform
+    float          squatPhase_     = 0.0f;
+
+    void UpdateNormal(float dt, const glm::vec3& playerPos);
+    void UpdateStrange(float dt, float gameTime);
+    void ComputeMatrix(float time);
+};
+```
+
+---
+
+### 4.4 — `include/AntoniAI.h` — The Antagonist
+
+```cpp
+#pragma once
+#include <glm/glm.hpp>
+#include "ModelLoader.h"
+#include "Shader.h"
+#include "ParticleSystem.h"
+
+enum class AntoniState {
+    ABSENT,          // Not in the scene yet
+    MATERIALIZING,   // Fades in from Aisle 7, ominous
+    INSPECTING,      // Looks at the mess. Looks at you.
+    KIDNAPPING,      // Drags strange customer to back room
+    IDLE_THREAT,     // Stands still staring post-kidnap
+    THROWING_OIL,    // Second incident — douses area in baby oil
+    POINTING,        // Points directly at player (2s beat)
+    CHASING,         // Full sprint chase toward player
+    JUMPSCARE_POSE,  // Arms raised, in player's face (but not caught)
+    CATCHING         // Final catch — game over trigger
+};
+
+class AntoniAI {
+public:
+    AntoniAI(const std::string& modelPath);
+    ~AntoniAI();
+
+    void Update(float dt, const glm::vec3& playerPos,
+                float gameTime, ParticleSystem& particles);
+    void Draw(const Shader& shader,
+              const glm::mat4& view, const glm::mat4& proj);
+
+    // State triggers (called by EventManager at scripted beats)
+    void Materialize(glm::vec3 position);
+    void BeginKidnap(glm::vec3 victimPos);
+    void BeginOilThrow(glm::vec3 centerPos);
+    void BeginChase(glm::vec3 playerPos);
+    void Reset();
+
+    AntoniState State()       const { return state_; }
+    glm::vec3   Position()    const { return pos_; }
+    bool        CaughtPlayer(const glm::vec3& playerPos) const;
+    bool        IsChasing()   const { return state_ == AntoniState::CHASING; }
+    bool        IsJumpscare() const { return state_ == AntoniState::JUMPSCARE_POSE; }
+    float       DistanceTo(const glm::vec3& p) const;
+
+private:
+    ModelLoader*  model_;
+    AntoniState   state_       = AntoniState::ABSENT;
+    glm::vec3     pos_;
+    glm::vec3     targetPos_;
+    glm::mat4     modelMatrix_;
+    float         stateTimer_  = 0.0f;
+    float         chaseSpeed_  = 5.5f;      // Faster than the player
+    float         visibility_  = 0.0f;      // 0=invisible → 1=fully visible
+    // Trench coat sway transform
+    float         swayAngle_   = 0.0f;
+    bool          hasOilJug_   = true;
+
+    void UpdateChase(float dt, const glm::vec3& playerPos);
+    void ComputeMatrix(float time);
+    void TransitionTo(AntoniState s);
+    glm::vec3 NavigateTo(const glm::vec3& target, float dt);
+};
+```
+
+---
+
+### 4.5 — `include/MarketMap.h` — SUPERMEME MARKET™ Layout
+
+```cpp
+#pragma once
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <vector>
+#include <string>
+#include "Shader.h"
+#include "Collision.h"
+
+// Named zones in the market — used by TaskSystem and EventManager
+struct MarketZone {
+    std::string  name;
+    glm::vec3    center;
+    float        radius;
+};
+
+// Oil puddle hazard — slows + disorients player on contact
+struct OilPuddle {
+    glm::vec3  position;
+    float      radius;
+    bool       active;
+    float      lifetime;
+};
+
+class MarketMap {
+public:
+    MarketMap();
+    ~MarketMap();
+
+    bool Init(const std::string& floorTexPath,
+              const std::string& wallTexPath,
+              const std::string& shelfTexPath);
+    void Draw(const Shader& shader,
+              const glm::mat4& view, const glm::mat4& proj,
+              float time, float fearFactor);
+    void Update(float dt);
+
+    // Queries
+    const std::vector<AABB>&       GetColliders()          const;
+    glm::vec3                      GetPlayerSpawn()        const;
+    glm::vec3                      GetZoneCenter(const std::string& name) const;
+    glm::vec3                      GetCarKeysSpawn()       const;
+    glm::vec3                      GetExitDoorPos()        const;
+    glm::vec3                      GetCarPos()             const;
+    glm::vec3                      GetAntoniSpawnPos()     const; // Aisle 7
+    glm::vec3                      GetBackRoomDoorPos()    const;
+
+    // Events
+    void AddOilPuddle(glm::vec3 pos, float radius = 1.5f);
+    bool PlayerInOilPuddle(const glm::vec3& playerPos) const;
+    void DropPoopDecal(glm::vec3 pos);  // Spawns brown decal quad
+    void OpenExitDoor();                 // Animates door open
+
+    const std::vector<MarketZone>& GetZones() const;
+
+private:
+    unsigned int floorTexID_, wallTexID_, shelfTexID_, poopDecalTexID_, oilTexID_;
+    unsigned int floorVAO_, wallVAO_, shelfVAO_;
+    std::vector<AABB>        colliders_;
+    std::vector<MarketZone>  zones_;
+    std::vector<OilPuddle>   oilPuddles_;
+    bool                     exitDoorOpen_ = false;
+    float                    exitDoorAngle_= 0.0f;
+
+    // Market layout constants:
+    // 5 aisles (A-E), checkout zone, back room, parking lot (exterior)
+    void BuildFloor();
+    void BuildWalls();
+    void BuildShelves();   // 5 double-sided shelf rows
+    void BuildCheckout();  // Cash register zone
+    void BuildBackRoom();  // Locked door — unlocks after Day 1 kidnap
+    void BuildParking();   // Exterior area with player's car
+    void UploadGeometry();
+    unsigned int LoadTex(const std::string& path);
+};
+```
+
+---
+
+### 4.6 — `include/EventManager.h` — Scripted Story Beat Director
+
+```cpp
+#pragma once
+#include <functional>
+#include <queue>
+#include <string>
+
+// The EventManager fires narrative events at precise game conditions.
+// Each event has a trigger condition and an action callback.
+struct StoryEvent {
+    std::string id;
+    std::function<bool()>  trigger;   // Returns true when event should fire
+    std::function<void()>  action;    // What happens when it fires
+    bool                   fired = false;
+    bool                   blocking = false; // Blocks gameplay while active
+};
+
+class EventManager {
+public:
+    void RegisterEvent(StoryEvent event);
+    void Update(float dt);
+    bool IsBlocking() const;  // True if a blocking event is playing
+    void SkipCurrent();       // Allow player to skip non-critical cutscenes
+
+    // Pre-built event chains for each act
+    void RegisterDay1Events(class AntoniAI& a, class CustomerAI& c,
+                            class AudioManager& audio, class GameStateMachine& gsm);
+    void RegisterDay5Events(class AntoniAI& a, class CustomerAI& c,
+                            class MarketMap& map, class AudioManager& audio,
+                            class GameStateMachine& gsm);
+
+private:
+    std::vector<StoryEvent> events_;
+    bool blocking_ = false;
+    float blockTimer_ = 0.0f;
+};
+```
+
+---
+
+### 4.7 — `include/Camera.h` — First-Person + Slip Physics
+
+```cpp
+#pragma once
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+class Camera {
+public:
+    Camera(glm::vec3 startPos = {0.f, 1.7f, 0.f},
+           float yaw = -90.f, float pitch = 0.f);
+
+    void Update(float dx, float dy, float sensitivity);
+    void Move(glm::vec3 direction, float speed, float dt);
+    void Bob(bool isMoving, float dt);
+    void ApplyFearEffect(int fear, float time);  // Shake + tilt at high fear
+    void ApplySlip(float dt);                    // Uncontrolled sliding on oil
+    void StopSlip();
+
+    glm::mat4 GetViewMatrix()                     const;
+    glm::mat4 GetProjectionMatrix(int w, int h)   const;
+    glm::vec3 Position()  const { return pos_; }
+    glm::vec3 Front()     const { return front_; }
+    glm::vec3 Right()     const { return right_; }
+    bool      IsSlipping() const { return slipping_; }
+
+private:
+    glm::vec3 pos_, front_, up_, right_;
+    float     yaw_, pitch_;
+    float     bobPhase_    = 0.0f;
+    float     tiltOffset_  = 0.0f;
+    float     slipVelX_    = 0.0f;
+    float     slipVelZ_    = 0.0f;
+    bool      slipping_    = false;
+    void      UpdateVectors();
+};
+```
+
+---
+
+### 4.8 — `include/UIRenderer.h` — All 2D Screens
+
+```cpp
+#pragma once
+#include <string>
+#include "GameState.h"
+
+class UIRenderer {
+public:
+    bool Init(int screenW, int screenH);
+    void Shutdown();
+
+    // ── Full Screens ──────────────────────────────────────────────────────────
+    void DrawLoadingScreen(float progress, const std::string& statusLine);
+    void DrawMainMenu(int hoveredItem);
+    // Items: 0=NEW GAME  1=CONTINUE  2=SETTINGS  3=QUIT
+    void DrawSettingsMenu(GameStateData& state);
+
+    // ── Cutscene Screens ──────────────────────────────────────────────────────
+    void DrawCutsceneDay1(float elapsed);     // "Day 1. A Normal Tuesday."
+    void DrawPoopEvent1(float elapsed);       // Floor incident — brown flash
+    void DrawCutsceneDay5(float elapsed);     // 4-day skip card + legend text
+    void DrawPoopEvent2(float elapsed);       // Register incident — chaos
+    void DrawBabyOilCutscene(float elapsed);  // Antoni pours, points
+    void DrawChaseCutscene(float elapsed);    // "RUN" title slam
+
+    // ── Gameplay Overlays ─────────────────────────────────────────────────────
+    void DrawHUD(int fear, const std::string& activeTask,
+                 bool nearInteractable, const std::string& interactHint,
+                 float playTime, bool hasKeys, bool antoniChasing);
+    void DrawPauseMenu(int hoveredItem);
+    // Items: 0=RESUME  1=RESTART  2=MAIN MENU  3=QUIT
+
+    // ── End Screens ───────────────────────────────────────────────────────────
+    void DrawJumpscare(float intensity);      // Antoni face flash
+    void DrawGameOver(int deaths, float survivalTime);
+    void DrawWinScreen(float clearTime, int deaths);
+    void DrawCredits(float scrollY);
+
+    // ── Utilities ─────────────────────────────────────────────────────────────
+    void DrawFade(float alpha, float r=0,float g=0,float b=0);
+    void DrawSubtitle(const std::string& text, float alpha, float y = 0.12f);
+    void DrawTypewriter(const std::string& text, float elapsed,
+                        float charsPerSec, float x, float y, float scale);
+    void RenderText(const std::string& text, float x, float y,
+                    float scale, float r, float g, float b, float a = 1.0f);
+    void RenderQuad(float x, float y, float w, float h,
+                    float r, float g, float b, float a, unsigned int texID = 0);
+
+private:
+    unsigned int quadVAO_, quadVBO_, shaderID_, textShaderID_, fontAtlasID_;
+    unsigned int loadBgID_, menuBgID_, crosshairID_, fearBarID_, warningIconID_;
+    int          screenW_, screenH_;
+    unsigned int LoadTex(const char* path);
+    void         InitQuad();
+    void         InitFontAtlas();
+};
+```
+
+---
+
+### 4.9 — `include/ParticleSystem.h` — Thematic Particle FX
+
+```cpp
+#pragma once
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <vector>
+#include "Shader.h"
+
+struct Particle {
+    glm::vec3 pos, vel;
+    glm::vec4 color;
+    float     life, maxLife, size;
+    bool      active;
+};
+
+class ParticleSystem {
+public:
+    explicit ParticleSystem(int maxParticles = 512);
+    ~ParticleSystem();
+
+    void Update(float dt);
+    void Draw(const Shader& shader, const glm::mat4& view,
+              const glm::mat4& proj,
+              const glm::vec3& camRight, const glm::vec3& camUp);
+
+    // ── Market-specific emitters ──────────────────────────────────────────────
+    void EmitPoopStorm(glm::vec3 origin, int count = 64);    // 💩 THE FLOOR
+    void EmitPoopRegister(glm::vec3 origin, int count = 80); // 💩 THE REGISTER
+    void EmitBabyOilSplash(glm::vec3 origin, int count = 48);// Translucent yellow
+    void EmitOilDrip(glm::vec3 origin);                      // Per-frame drip FX
+    void EmitKeySparkle(glm::vec3 origin);                   // Keys found!
+    void EmitFear(glm::vec3 origin, int count = 12);         // Rising fear smoke
+    void EmitAntoniMaterialize(glm::vec3 origin);            // Dark wisps
+
+private:
+    std::vector<Particle> particles_;
+    unsigned int VAO_, VBO_;
+    int          max_;
+    unsigned int brownTexID_, oilTexID_, sparkTexID_, smokeTexID_;
+    int FindDead();
+};
+```
+
+---
+
+### 4.10 — `include/PostProcess.h` — Fear-Driven Post FX
+
+```cpp
+#pragma once
+#include <glad/glad.h>
+#include "Shader.h"
+
+class PostProcess {
+public:
+    bool Init(int w, int h);
+    void Resize(int w, int h);
+    void BeginCapture();
+    void EndCapture();
+
+    // fear: 0-100. isChase: Antoni is chasing. isSlipping: oil physics active.
+    void Render(int fear, float time,
+                bool isChase, bool isSlipping,
+                bool isJumpscare, float jumpscareT);
+
+private:
+    unsigned int fbo_, colorTex_, rbo_;
+    unsigned int screenVAO_, screenVBO_;
+    Shader       shader_;
+    int          w_, h_;
+    void InitQuad();
+    void InitFBO(int w, int h);
+};
+```
+
+---
+
+### 4.11 — GLSL Shaders
+
+#### `assets/shaders/world/world.vert`
+```glsl
+#version 330 core
+layout(location=0) in vec3 aPos;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in vec2 aTexCoord;
+out vec2 TexCoord;
+out vec3 FragPos;
+out vec3 Normal;
+uniform mat4 model, view, projection;
+uniform float time;
+uniform float fearFactor;   // 0.0-1.0
+void main() {
+    vec3 pos = aPos;
+    // Subtle geometry warp at high fear (walls breathe)
+    pos.x += sin(pos.y * 3.0 + time * 1.5) * fearFactor * 0.025;
+    pos.y += cos(pos.x * 2.0 + time * 1.2) * fearFactor * 0.015;
+    FragPos  = vec3(model * vec4(pos, 1.0));
+    Normal   = mat3(transpose(inverse(model))) * aNormal;
+    TexCoord = aTexCoord;
+    gl_Position = projection * view * vec4(FragPos, 1.0);
+}
+```
+
+#### `assets/shaders/world/world.frag`
+```glsl
+#version 330 core
+in vec2  TexCoord;
+in vec3  FragPos;
+in vec3  Normal;
+out vec4 FragColor;
+uniform sampler2D texture1;
+uniform vec3      lightPos;
+uniform vec3      viewPos;
+uniform float     time;
+uniform float     fearFactor;   // 0.0-1.0 (fear level / 100)
+uniform float     chaseFactor;  // 0.0 or 1.0 — Antoni is chasing
+
+void main() {
+    vec2 uv = TexCoord;
+    // UV distortion during chase
+    uv.x += sin(uv.y * 8.0 + time * 4.0) * fearFactor * 0.02;
+
+    vec4  texColor = texture(texture1, uv);
+    vec3  norm     = normalize(Normal);
+    vec3  lightDir = normalize(lightPos - FragPos);
+    float diff     = max(dot(norm, lightDir), 0.2);
+
+    // Harsh red tint when Antoni is chasing
+    vec3  chaseRed = mix(vec3(1.0), vec3(1.5, 0.3, 0.3), chaseFactor * 0.7);
+    // Desaturate + darken at high fear (market feels oppressive)
+    vec3  color    = texColor.rgb * diff * chaseRed;
+    float lum      = dot(color, vec3(0.299, 0.587, 0.114));
+    color = mix(color, vec3(lum * 0.6), fearFactor * 0.45);
+
+    FragColor = vec4(color, texColor.a);
+}
+```
+
+#### `assets/shaders/post/post.frag`
+```glsl
+#version 330 core
+in  vec2      TexCoord;
+out vec4      FragColor;
+uniform sampler2D screenTexture;
+uniform float     fearFactor;       // 0.0-1.0
+uniform float     time;
+uniform float     chaseFactor;      // 0.0-1.0 (is Antoni chasing?)
+uniform float     slipFactor;       // 0.0-1.0 (player slipping on oil)
+uniform float     jumpscareT;       // 0.0-1.0 (jumpscare flash)
+
+void main() {
+    vec2 uv = TexCoord;
+
+    // Chromatic aberration (fear-driven)
+    float aberr = fearFactor * 0.015 + chaseFactor * 0.025;
+    float r = texture(screenTexture, uv + vec2( aberr, 0.0)).r;
+    float g = texture(screenTexture, uv).g;
+    float b = texture(screenTexture, uv - vec2( aberr, 0.0)).b;
+
+    // Slip effect: rotational smear
+    float slipShift = sin(time * 12.0) * slipFactor * 0.03;
+    uv.x += slipShift;
+    uv.y += cos(time * 10.0) * slipFactor * 0.02;
+
+    // Screen warp during chase
+    uv.x += sin(uv.y * 15.0 + time * 6.0) * chaseFactor * 0.005;
+
+    // Vignette (stronger during chase)
+    vec2  vigUV = uv * (1.0 - uv.yx);
+    float vig   = pow(clamp(vigUV.x * vigUV.y * 15.0, 0.0, 1.0),
+                      0.25 + fearFactor * 0.6 + chaseFactor * 0.8);
+
+    // Film grain
+    float noise = fract(sin(dot(uv + time * 0.001,
+                    vec2(127.1, 311.7))) * 43758.5453);
+
+    vec3 color = vec3(r, g, b);
+    color *= vig;
+    color += (noise - 0.5) * 0.03 * fearFactor;
+
+    // Scanlines (fear-driven, retro horror look)
+    color -= sin(uv.y * 900.0) * 0.03 * fearFactor;
+
+    // Baby oil smear (slipping): iridescent sheen
+    vec3 oilSheen = vec3(0.9, 0.95, 1.1) * slipFactor * 0.25;
+    color += oilSheen;
+
+    // Jumpscare flash: white-out
+    color = mix(color, vec3(1.0, 0.95, 0.9), jumpscareT * 0.9);
+
+    FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+}
+```
+
+---
+
+### 4.12 — `src/main.cpp` — Full Integrated Game Loop
+
+```cpp
+// main.cpp — MARKET HORROR: THE LEGEND OF ANTONI v3.0
+// Acts: Day 1 Normal → Poop Floor → Antoni Kidnap
+//    → Day 5 Legend → Normal Shift → Poop Register → Baby Oil → CHASE → Escape
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <iostream>
+
+#include "GameState.h"
+#include "UIRenderer.h"
+#include "AudioManager.h"
+#include "InputManager.h"
+#include "Camera.h"
+#include "Shader.h"
+#include "MarketMap.h"
+#include "AntoniAI.h"
+#include "CustomerAI.h"
+#include "TaskSystem.h"
+#include "EventManager.h"
+#include "ParticleSystem.h"
+#include "PostProcess.h"
+#include "SaveLoad.h"
+
+static constexpr int   W            = 1280;
+static constexpr int   H            = 720;
+static constexpr float PLAYER_SPEED = 3.8f;
+static constexpr float FEAR_DRAIN   = 1.5f;  // per second near Antoni
+static constexpr float FEAR_REGEN   = 0.3f;  // per second when safe
+
+// Scene timer helpers
+static float sceneTimer = 0.0f;
+static float fadeAlpha  = 0.0f;
+
+void FramebufferSizeCallback(GLFWwindow*, int w, int h) {
+    glViewport(0, 0, w, h);
+}
+
+int main() {
+    // ── GLFW + GLAD ────────────────────────────────────────────────────────────
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* win = glfwCreateWindow(W, H,
+        "MARKET HORROR: THE LEGEND OF ANTONI", nullptr, nullptr);
+    glfwMakeContextCurrent(win);
+    glfwSetFramebufferSizeCallback(win, FramebufferSizeCallback);
+    glfwSwapInterval(1);
+    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // ── Subsystems ─────────────────────────────────────────────────────────────
+    auto& state  = GameStateMachine::Get().Data();
+    auto& audio  = AudioManager::Get();
+    auto& input  = InputManager::Get();
+    audio.Init();
+    input.Init(win);
+    SaveLoad::LoadSettings(state);
+
+    UIRenderer    ui;    ui.Init(W, H);
+    PostProcess   post;  post.Init(W, H);
+
+    // Heap-allocated heavy objects (after loading screen)
+    Camera*        cam       = nullptr;
+    MarketMap*     market    = nullptr;
+    AntoniAI*      antoni    = nullptr;
+    CustomerAI*    customer1 = nullptr;   // Day 1 strange customer
+    CustomerAI*    customer2 = nullptr;   // Day 5 strange customer
+    TaskSystem*    tasks     = nullptr;
+    EventManager*  events    = nullptr;
+    ParticleSystem* particles= nullptr;
+    Shader*        worldShader=nullptr;
+
+    float prevTime = (float)glfwGetTime();
+
+    // ── GAME LOOP ──────────────────────────────────────────────────────────────
+    while (!glfwWindowShouldClose(win)) {
+        float now = (float)glfwGetTime();
+        float dt  = glm::clamp(now - prevTime, 0.0f, 0.1f);
+        prevTime  = now;
+
+        input.PollEvents();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // ── ESC: pause / back ─────────────────────────────────────────────────
+        if (input.IsKeyPressed(GLFW_KEY_ESCAPE)) {
+            if (state.currentScene == GameScene::GAMEPLAY_DAY1  ||
+                state.currentScene == GameScene::GAMEPLAY_DAY5  ||
+                state.currentScene == GameScene::GAMEPLAY_CHASE) {
+                state.isPaused = !state.isPaused;
+                input.SetCursorLocked(!state.isPaused);
+                audio.PlaySFX(AudioManager::SFX_CLICK);
+            } else if (state.currentScene == GameScene::SETTINGS) {
+                GameStateMachine::Get().TransitionTo(GameScene::MAIN_MENU);
+            }
+        }
+
+        sceneTimer += dt;
+
+        switch (state.currentScene) {
+
+        // ── LOADING ──────────────────────────────────────────────────────────
+        case GameScene::LOADING: {
+            static float loadT = 0.0f;
+            loadT += dt * 0.28f; // ~3.5 seconds to full load
+            state.loadProgress = glm::min(loadT, 1.0f);
+            static const char* msgs[] = {
+                "Loading cursed groceries...",
+                "Stocking shelves (virtually)...",
+                "Hiring Strange Customers...",
+                "Sourcing Baby Oil...",
+                "Summoning Antoni from Aisle 7...",
+                "Mopping the floor... (it didn't work)",
+                "READY."
+            };
+            int msgIdx = (int)(state.loadProgress * 6.99f);
+            ui.DrawLoadingScreen(state.loadProgress, msgs[msgIdx]);
+
+            if (state.loadProgress >= 1.0f && !cam) {
+                cam      = new Camera({0.f, 1.7f, 3.f});
+                market   = new MarketMap();
+                market->Init("assets/textures/world_skin.png",
+                             "assets/textures/world_skin.png",
+                             "assets/textures/shelf_tex.png");
+                anthony  = new AntoniAI("assets/models/characters/entity_antoni.obj");
+                customer1= new CustomerAI(CustomerType::STRANGE,
+                             market->GetZoneCenter("AISLE_A"),
+                             "assets/models/characters/entity_strange_customer.obj");
+                customer2= new CustomerAI(CustomerType::STRANGE,
+                             market->GetZoneCenter("CHECKOUT"),
+                             "assets/models/characters/entity_strange_customer.obj");
+                tasks    = new TaskSystem();
+                tasks->InitDay1Tasks();
+                events   = new EventManager();
+                particles= new ParticleSystem(1024);
+                worldShader = new Shader(
+                    "assets/shaders/world/world.vert",
+                    "assets/shaders/world/world.frag");
+                events->RegisterDay1Events(*anthony, *customer1,
+                                           audio, GameStateMachine::Get());
+                GameStateMachine::Get().TransitionTo(GameScene::MAIN_MENU);
+                audio.PlayBGM(AudioManager::BGM_MENU);
+            }
+            break;
+        }
+
+        // ── MAIN MENU ─────────────────────────────────────────────────────────
+        case GameScene::MAIN_MENU: {
+            static int hovered = 0;
+            int dx=0, dy=0;
+            input.Navigate(dx, dy);
+            if (dy != 0) {
+                hovered = glm::clamp(hovered + dy, 0, 3);
+                audio.PlaySFX(AudioManager::SFX_CLICK);
+            }
+            if (input.Confirm()) {
+                audio.PlaySFX(AudioManager::SFX_CLICK);
+                if (hovered == 0) {  // NEW GAME
+                    GameStateMachine::Get().TransitionTo(GameScene::CUTSCENE_DAY1);
+                    audio.StopBGM();
+                    sceneTimer = 0.0f;
+                } else if (hovered == 1 && SaveLoad::SaveExists()) { // CONTINUE
+                    SaveLoad::LoadGame(state);
+                    GameStateMachine::Get().TransitionTo(state.currentScene);
+                } else if (hovered == 2) { // SETTINGS
+                    GameStateMachine::Get().TransitionTo(GameScene::SETTINGS);
+                } else if (hovered == 3) { // QUIT
+                    glfwSetWindowShouldClose(win, true);
+                }
+            }
+            ui.DrawMainMenu(hovered);
+            break;
+        }
+
+        // ── SETTINGS ─────────────────────────────────────────────────────────
+        case GameScene::SETTINGS:
+            ui.DrawSettingsMenu(state);
+            // (InputManager handles slider navigation inside DrawSettingsMenu)
+            break;
+
+        // ── CUTSCENE: DAY 1 ───────────────────────────────────────────────────
+        case GameScene::CUTSCENE_DAY1:
+            ui.DrawCutsceneDay1(sceneTimer);
+            if (sceneTimer >= 6.0f) {
+                GameStateMachine::Get().TransitionTo(GameScene::GAMEPLAY_DAY1);
+                input.SetCursorLocked(true);
+                audio.PlayBGM(AudioManager::BGM_NORMAL_SHIFT, true, 0.35f);
+                sceneTimer = 0.0f;
+            }
+            break;
+
+        // ── GAMEPLAY: DAY 1 — Normal Shift ────────────────────────────────────
+        case GameScene::GAMEPLAY_DAY1:
+            if (state.isPaused) {
+                // Pause menu handled by helper below
+                ui.DrawPauseMenu(0);
+            } else {
+                post.BeginCapture();
+
+                // Player movement
+                glm::vec3 dir{0};
+                float speed = PLAYER_SPEED;
+                if (input.MoveForward())  dir += cam->Front();
+                if (input.MoveBackward()) dir -= cam->Front();
+                if (input.MoveLeft())     dir -= cam->Right();
+                if (input.MoveRight())    dir += cam->Right();
+                dir.y = 0;
+                if (glm::length(dir) > 0.01f) dir = glm::normalize(dir);
+                cam->Move(dir, speed, dt);
+                cam->Update(input.MouseDelta().x, input.MouseDelta().y,
+                            state.mouseSensitivity);
+                cam->Bob(glm::length(dir) > 0.01f, dt);
+
+                // Collision resolve
+                glm::vec3 p = cam->Position();
+                AABB playerBox = MakeAABB(p, {0.3f, 0.9f, 0.3f});
+                for (auto& wall : market->GetColliders()) {
+                    if (playerBox.Intersects(wall)) {
+                        glm::vec3 mtv = AABB::Resolve(playerBox, wall);
+                        cam->Move(mtv, 1.0f, 1.0f); // direct push
+                    }
+                }
+
+                // Task interaction
+                if (input.Interact())
+                    tasks->Update(cam->Position(), true);
+                else
+                    tasks->Update(cam->Position(), false);
+
+                // Events (poop trigger, Antoni spawn)
+                events->Update(dt);
+
+                // Render world
+                worldShader->Use();
+                worldShader->SetMat4("view", cam->GetViewMatrix());
+                worldShader->SetMat4("projection",
+                    cam->GetProjectionMatrix(W, H));
+                worldShader->SetVec3("viewPos", cam->Position());
+                worldShader->SetVec3("lightPos", {0,3,0});
+                worldShader->SetFloat("time", now);
+                worldShader->SetFloat("fearFactor", state.fearLevel / 100.0f);
+                worldShader->SetFloat("chaseFactor", 0.0f);
+                market->Draw(*worldShader,
+                    cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H),
+                    now, state.fearLevel / 100.0f);
+                customer1->Draw(*worldShader,
+                    cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H));
+                particles->Update(dt);
+                particles->Draw(*worldShader, cam->GetViewMatrix(),
+                    cam->GetProjectionMatrix(W, H),
+                    cam->Right(), cam->Front());
+
+                post.EndCapture();
+                post.Render(state.fearLevel, now, false, false, false, 0.0f);
+
+                // HUD
+                bool nearTask = tasks->IsNearActiveTask(cam->Position());
+                std::string taskDesc = tasks->GetActiveTask()
+                    ? tasks->GetActiveTask()->description : "Survive.";
+                std::string hint = nearTask ? "[E] " +
+                    (tasks->GetActiveTask() ? tasks->GetActiveTask()->subText
+                     : "Do the thing") : "";
+                ui.DrawHUD(state.fearLevel, taskDesc, nearTask, hint,
+                           state.playTime, state.hasCarKeys,
+                           state.antoniChasing);
+                state.playTime += dt;
+            }
+            break;
+
+        // ── CUTSCENE: POOP EVENT 1 (FLOOR) ────────────────────────────────────
+        case GameScene::CUTSCENE_POOP1:
+            ui.DrawPoopEvent1(sceneTimer);
+            if (sceneTimer < 0.5f)
+                audio.PlaySFX("sfx_poop_event");
+            if (sceneTimer >= 8.0f) {
+                GameStateMachine::Get().TransitionTo(GameScene::CUTSCENE_DAY5);
+                sceneTimer = 0.0f;
+                audio.PlaySFX("narr_legend_of_antoni");
+            }
+            break;
+
+        // ── CUTSCENE: DAY 5 + LEGEND ──────────────────────────────────────────
+        case GameScene::CUTSCENE_DAY5:
+            ui.DrawCutsceneDay5(sceneTimer);
+            if (sceneTimer >= 12.0f) {
+                tasks->InitDay5Tasks();
+                events->RegisterDay5Events(*anthony, *customer2, *market,
+                                            audio, GameStateMachine::Get());
+                GameStateMachine::Get().TransitionTo(GameScene::GAMEPLAY_DAY5);
+                audio.PlayBGM(AudioManager::BGM_TENSION, true, 0.3f);
+                input.SetCursorLocked(true);
+                sceneTimer = 0.0f;
+            }
+            break;
+
+        // ── GAMEPLAY: DAY 5 — Tension Shift ──────────────────────────────────
+        case GameScene::GAMEPLAY_DAY5:
+            // (Identical structure to DAY1 gameplay, different task set + BGM)
+            // Antoni is present but ABSENT state — lurks in back room
+            // Events fire at task completion checkpoints
+            // [Full implementation mirrors GAMEPLAY_DAY1 block above]
+            break;
+
+        // ── CUTSCENE: POOP EVENT 2 (REGISTER) ────────────────────────────────
+        case GameScene::CUTSCENE_POOP2:
+            ui.DrawPoopEvent2(sceneTimer);
+            if (sceneTimer < 0.5f) {
+                audio.PlaySFX("sfx_poop_event");
+                audio.PlaySFX("narr_poop_register");
+            }
+            if (sceneTimer >= 6.0f) {
+                GameStateMachine::Get().TransitionTo(GameScene::CUTSCENE_CHASE);
+                sceneTimer = 0.0f;
+            }
+            break;
+
+        // ── CUTSCENE: BABY OIL + CHASE INTRO ─────────────────────────────────
+        case GameScene::CUTSCENE_CHASE:
+            ui.DrawBabyOilCutscene(sceneTimer);
+            if (sceneTimer < 0.2f) {
+                audio.PlaySFX("sfx_baby_oil_splash");
+                // Add oil puddles to market
+                market->AddOilPuddle(market->GetZoneCenter("CHECKOUT"), 3.0f);
+                market->AddOilPuddle(market->GetZoneCenter("AISLE_C"), 2.0f);
+                anthony->BeginChase(cam->Position());
+                particles->EmitBabyOilSplash(
+                    market->GetZoneCenter("CHECKOUT"), 96);
+            }
+            if (sceneTimer >= 5.0f) {
+                audio.StopBGM();
+                audio.PlayBGM(AudioManager::BGM_CHASE, true, 0.9f);
+                audio.PlaySFX("narr_chase_start");
+                state.antoniChasing = true;
+                input.SetCursorLocked(true);
+                GameStateMachine::Get().TransitionTo(GameScene::GAMEPLAY_CHASE);
+                sceneTimer = 0.0f;
+            }
+            break;
+
+        // ── GAMEPLAY: CHASE — Find Keys + Escape ──────────────────────────────
+        case GameScene::GAMEPLAY_CHASE: {
+            if (state.isPaused) { ui.DrawPauseMenu(0); break; }
+
+            post.BeginCapture();
+
+            // Player movement + sprint
+            glm::vec3 dir{0};
+            float speed = PLAYER_SPEED * (input.Sprint() ? 1.8f : 1.0f);
+            if (input.MoveForward())  dir += cam->Front();
+            if (input.MoveBackward()) dir -= cam->Front();
+            if (input.MoveLeft())     dir -= cam->Right();
+            if (input.MoveRight())    dir += cam->Right();
+            dir.y = 0;
+            if (glm::length(dir) > 0.01f) dir = glm::normalize(dir);
+
+            // Oil slip check
+            if (market->PlayerInOilPuddle(cam->Position()) && !state.isSlipping) {
+                state.isSlipping = true;
+                state.slipTimer  = 1.2f;
+                audio.PlaySFX("sfx_slip");
+            }
+            if (state.isSlipping) {
+                cam->ApplySlip(dt);
+                state.slipTimer -= dt;
+                if (state.slipTimer <= 0.0f) {
+                    state.isSlipping = false;
+                    cam->StopSlip();
+                }
+            } else {
+                cam->Move(dir, speed, dt);
+            }
+
+            cam->Update(input.MouseDelta().x, input.MouseDelta().y,
+                        state.mouseSensitivity);
+            cam->Bob(glm::length(dir) > 0.01f, dt);
+            cam->ApplyFearEffect(state.fearLevel, now);
+
+            // Antoni update
+            anthony->Update(dt, cam->Position(), now, *particles);
+
+            // Fear level — rises when Antoni near
+            float dist = anthony->DistanceTo(cam->Position());
+            if (dist < 8.0f)
+                state.fearLevel = glm::min(100,
+                    state.fearLevel + (int)(FEAR_DRAIN * dt * 60.0f));
+            else
+                state.fearLevel = glm::max(0,
+                    state.fearLevel - (int)(FEAR_REGEN * dt * 60.0f));
+
+            // Car keys pickup
+            if (!state.hasCarKeys) {
+                float keyDist = glm::distance(cam->Position(),
+                                              market->GetCarKeysSpawn());
+                if (keyDist < 1.5f && input.Interact()) {
+                    state.hasCarKeys = true;
+                    audio.PlaySFX("sfx_keys_found");
+                    particles->EmitKeySparkle(market->GetCarKeysSpawn());
+                }
+            }
+
+            // Exit door / car
+            if (state.hasCarKeys) {
+                float exitDist = glm::distance(cam->Position(),
+                                               market->GetCarPos());
+                if (exitDist < 2.5f) {
+                    audio.PlaySFX("sfx_car_start");
+                    audio.StopBGM();
+                    GameStateMachine::Get().TransitionTo(GameScene::WIN_SCREEN);
+                    sceneTimer = 0.0f;
+                }
+            }
+
+            // Antoni catch
+            if (anthony->CaughtPlayer(cam->Position())) {
+                state.deathCount++;
+                audio.StopBGM();
+                audio.PlaySFX("sfx_antoni_catch");
+                GameStateMachine::Get().TransitionTo(GameScene::GAME_OVER);
+                sceneTimer = 0.0f;
+            }
+
+            // Antoni jumpscare (close but not caught yet)
+            if (anthony->IsJumpscare()) {
+                GameStateMachine::Get().TransitionTo(GameScene::JUMPSCARE);
+                sceneTimer = 0.0f;
+            }
+
+            // Render
+            worldShader->Use();
+            worldShader->SetMat4("view", cam->GetViewMatrix());
+            worldShader->SetMat4("projection", cam->GetProjectionMatrix(W, H));
+            worldShader->SetVec3("viewPos", cam->Position());
+            worldShader->SetVec3("lightPos", {0, 3, 0});
+            worldShader->SetFloat("time", now);
+            worldShader->SetFloat("fearFactor", state.fearLevel / 100.0f);
+            worldShader->SetFloat("chaseFactor", 1.0f);
+
+            market->Draw(*worldShader, cam->GetViewMatrix(),
+                         cam->GetProjectionMatrix(W, H), now,
+                         state.fearLevel / 100.0f);
+            anthony->Draw(*worldShader, cam->GetViewMatrix(),
+                          cam->GetProjectionMatrix(W, H));
+            particles->Update(dt);
+            particles->Draw(*worldShader, cam->GetViewMatrix(),
+                            cam->GetProjectionMatrix(W, H),
+                            cam->Right(), cam->Front());
+
+            post.EndCapture();
+            post.Render(state.fearLevel, now, true,
+                        state.isSlipping, false, 0.0f);
+
+            std::string hint = !state.hasCarKeys &&
+                glm::distance(cam->Position(), market->GetCarKeysSpawn()) < 3.0f
+                ? "[E] Grab car keys — GO GO GO"
+                : state.hasCarKeys &&
+                  glm::distance(cam->Position(), market->GetCarPos()) < 5.0f
+                ? "[E] GET IN THE CAR"
+                : "";
+            ui.DrawHUD(state.fearLevel, "FIND YOUR CAR KEYS AND ESCAPE",
+                       !hint.empty(), hint, state.playTime,
+                       state.hasCarKeys, true);
+            state.playTime += dt;
+            break;
+        }
+
+        // ── JUMPSCARE ─────────────────────────────────────────────────────────
+        case GameScene::JUMPSCARE:
+            sceneTimer += dt;
+            audio.PlaySFX("sfx_antoni_catch");
+            ui.DrawJumpscare(glm::min(sceneTimer / 1.5f, 1.0f));
+            if (sceneTimer >= 1.5f) {
+                state.fearLevel = glm::min(100, state.fearLevel + 30);
+                GameStateMachine::Get().TransitionTo(GameScene::GAMEPLAY_CHASE);
+                sceneTimer = 0.0f;
+            }
+            break;
+
+        // ── GAME OVER ─────────────────────────────────────────────────────────
+        case GameScene::GAME_OVER:
+            if (sceneTimer < 0.1f)
+                audio.PlaySFX("narr_death");
+            ui.DrawGameOver(state.deathCount, state.playTime);
+            if (input.Confirm()) {
+                if (true /* try again */) {
+                    state.fearLevel   = 0;
+                    state.hasCarKeys  = false;
+                    state.antoniChasing = false;
+                    anthony->Reset();
+                    cam->Move(market->GetPlayerSpawn() - cam->Position(),
+                              1.0f, 1.0f);
+                    GameStateMachine::Get().TransitionTo(GameScene::GAMEPLAY_CHASE);
+                    audio.PlayBGM(AudioManager::BGM_CHASE, true, 0.9f);
+                    sceneTimer = 0.0f;
+                }
+            }
+            break;
+
+        // ── WIN SCREEN ────────────────────────────────────────────────────────
+        case GameScene::WIN_SCREEN:
+            if (sceneTimer < 0.1f)
+                audio.PlaySFX("narr_win");
+            ui.DrawWinScreen(state.playTime, state.deathCount);
+            if (input.Confirm() && sceneTimer > 3.0f) {
+                GameStateMachine::Get().TransitionTo(GameScene::CREDITS);
+                sceneTimer = 0.0f;
+            }
+            break;
+
+        // ── CREDITS ───────────────────────────────────────────────────────────
+        case GameScene::CREDITS:
+            ui.DrawCredits(sceneTimer * 35.0f);
+            if (input.Confirm()) {
+                GameStateMachine::Get().Reset();
+                GameStateMachine::Get().TransitionTo(GameScene::MAIN_MENU);
+                audio.PlayBGM(AudioManager::BGM_MENU);
+                sceneTimer = 0.0f;
+            }
+            break;
+
+        default: break;
+        }
+
+        input.EndFrame();
+        glfwSwapBuffers(win);
+        glfwPollEvents();
+    }
+
+    // ── Cleanup ───────────────────────────────────────────────────────────────
+    SaveLoad::SaveSettings(state);
+    audio.Shutdown();
+    delete cam; delete market; delete anthony;
+    delete customer1; delete customer2;
+    delete tasks; delete events; delete particles; delete worldShader;
+    ui.Shutdown();
+    glfwDestroyWindow(win);
+    glfwTerminate();
+    return 0;
+}
+```
+
+---
+
+### 4.13 — UIRenderer: Screen Content Specs
+
+Implement all screens with the following meme/horror market aesthetic:
+**Font:** Bitmap `Courier`-style, all caps, white on black or red on black.
+**Color palette:** `#0d0d0d` backgrounds, `#ff2222` accent, `#ffffff` text, `#ffd700` keys/items.
+
+| Screen | Content |
+|---|---|
+| **Loading** | Dark aisle background · Progress bar in green · Status text · "SUPERMEME MARKET™" logo top center |
+| **Main Menu** | Title: `MARKET HORROR` in massive flickering red letters · Subtitle: `"The Legend of Antoni"` · 4 menu buttons · Animated surveillance camera icon in corner |
+| **Settings** | Volume / sensitivity sliders · Fullscreen toggle · "Show Subtitles" toggle · Back button |
+| **Cutscene Day 1** | Typewriter text on black: `"Day 1. A normal Tuesday."` / `"You clock in at 8AM."` / `"Nothing bad ever happens here."` |
+| **Poop Event 1** | FULL SCREEN BROWN FLASH · Giant text: `"IT HAPPENED."` · Subtitle: `"ON THE FLOOR."` · Then Antoni silhouette slides in from right |
+| **Cutscene Day 5** | Title card: `"4 DAYS LATER"` + `"You have not spoken about it."` · Then coworker dialogue typewriter: full Antoni legend |
+| **Poop Event 2** | Screen shake + register explosion · `"NOT THE REGISTER"` text · Receipt confetti particles · Antoni appears |
+| **Baby Oil Cutscene** | Antoni producing jug (model visible) · Oil particles cascade · Slow-motion point at camera · `"HE IS POINTING AT YOU."` |
+| **HUD** | Top-left: `FEAR: ████░░ 60%` · Top-right: task description · Bottom-center: `[E] hint` · Center: crosshair · Bottom-left: timer · Key icon when collected |
+| **Pause** | Semi-transparent overlay · `— PAUSED —` · Resume / Restart / Main Menu / Quit |
+| **Jumpscare** | White-red flash · Antoni face fullscreen · `"GOT YOU"` (fades before catch) |
+| **Game Over** | Black screen · Blinking red: `"HE GOT YOU"` · Smaller: `"He did not very cool stuff to you."` · Stats · TRY AGAIN button |
+| **Win Screen** | White fade-in · `"YOU ESCAPED"` gold text · `"You quit via text message. You are safe."` · Stats · Credits button |
+| **Credits** | Scrolling text on black (see below) |
+
+**Credits text:**
+```
+MARKET HORROR
+THE LEGEND OF ANTONI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Built Autonomously by an AI Agent
+No humans were harmed.
+Several were mildly confused.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROGRAMMING        Claude (Autonomous)
+NARRATIVE          espeak-NG
+AUDIO DIRECTION    ffmpeg -f lavfi
+BABY OIL PHYSICS   Newton's Laws
+STRANGE CUSTOMERS  Unknown Origin
+FLOOR              Was Clean Once
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Special Thanks:
+  The Register (RIP)
+  Aisle 7 (forever cursed)
+  Your Dignity (also RIP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Cleanup on Aisle 7.
+Cleanup on Aisle 7.
+Cleanup on Aisle 7.
+
+[PRESS ANY KEY]
+```
+
+---
+
+## 🏗️ PHASE 5: Compile & Auto-Repair
+
+```bash
+cd MarketHorror_Antoni
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo 2>&1 | tee cmake_output.log
+
+if grep -qi "error" cmake_output.log; then
+    echo "[AUTO-REPAIR] CMake error — analyzing and patching..."
+fi
+
+make -j$(nproc) 2>&1 | tee make_output.log
+
+if [ -f "./MarketHorror_Antoni" ]; then
+    echo "╔═══════════════════════════════════════════════════════════════╗"
+    echo "║  COMPILATION SUCCESSFUL. THE LEGEND OF ANTONI IS READY.      ║"
+    echo "║  Run: ./build/MarketHorror_Antoni                            ║"
+    echo "╚═══════════════════════════════════════════════════════════════╝"
+else
+    echo "[AUTO-REPAIR] Attempting autonomous fix — attempt loop..."
+    for i in 1 2 3 4 5; do
+        echo "[ATTEMPT $i] Reading errors and patching..."
+        make -j$(nproc) 2>&1 | tee make_repair_$i.log
+        [ -f "./MarketHorror_Antoni" ] && echo "FIXED ON ATTEMPT $i." && break
+    done
+fi
+```
+
+---
+
+## ✅ PHASE 6: Verification Checklist
+
+```
+[✓] Window: 1280x720 "MARKET HORROR: THE LEGEND OF ANTONI"
+[✓] Loading Screen: progress bar + "Summoning Antoni from Aisle 7..."
+[✓] Main Menu: dark supermarket bg + animated title
+[✓] Settings: sliders and toggles functional
+[✓] Cutscene Day 1: typewriter text, narrator audio
+[✓] Gameplay Day 1: first-person movement + shelf restock tasks
+[✓] Strange Customer 1 spawns + poop event fires on floor
+[✓] Poop Event 1: brown flash screen + Antoni materializes
+[✓] Day 5 cutscene: 4-day skip card + full legend typewriter
+[✓] Gameplay Day 5: tension BGM, tasks, ambient groaning
+[✓] Strange Customer 2 spawns + poop event fires on register
+[✓] Poop Event 2: screen shake + receipt particles
+[✓] Baby Oil cutscene: Antoni pours + points at player
+[✓] Chase gameplay: sprint, collision, fear bar climbing
+[✓] Oil puddle hazard: player slips, screen smears
+[✓] Car keys: hidden in market, E to pick up
+[✓] Antoni AI: materialize → kidnap → inspect → chase states
+[✓] Antoni chases at 5.5 units/sec (faster than player)
+[✓] Jumpscare: white-red flash when Antoni close
+[✓] Game Over: caught text + "not very cool stuff"
+[✓] Win Screen: car escape + narrator audio plays
+[✓] Credits: scrolling "Cleanup on Aisle 7" text
+[✓] Post-FX: chromatic aberration + oil smear + vignette
+[✓] All audio: TTS narration, SFX, BGM loops
+[✓] Save/Load: settings persist across launches
+```
+So there will be the "Wild Ending" where the Player finds Baby Oil he puts it on his Meat (Will Be censored by default) then it will Get Bigger Then the Player must find 3 female customers white The Antagonist Chases Him then After Interacting with an female customer the player will get on an cutscene where he puts his meat inside the girl butt (Will be censored by default toggable in config) then the player needs to press space and an White effect will Happen And the Antagonist Will Be Respawned and he will leave the cutscene and proceed on finding the next also in each in each girl after finishing the cutscene the player must press space to stroke his meat Btw the Player must try convicing the girl to do that if she refuses the player skips and goes to the next So we dont break laws
+---
+
+*End of MARKET HORROR: THE LEGEND OF ANTONI — Full Agent Prompt v3.0*
+*"Cleanup on Aisle 7."*
