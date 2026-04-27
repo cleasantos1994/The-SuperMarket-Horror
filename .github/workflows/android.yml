@@ -29,8 +29,7 @@ jobs:
       - name: Build with Gradle
         run: |
           cd TheSupermarket/android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
