@@ -8,7 +8,7 @@ def run(cmd):
 def generate_textures():
     print("Generating High-Quality Textures...")
     # Better floor tiles
-    run("magick -size 512x512 tile:checkerboard -fill '#a8a8a8' -draw 'color 0,0 reset' -attenuate 0.1 +noise Gaussian TheSupermarket/assets/textures/world_skin.png")
+    run("magick -size 512x512 pattern:checkerboard -fill '#a8a8a8' -draw 'color 0,0 reset' -attenuate 0.1 +noise Gaussian TheSupermarket/assets/textures/world_skin.png")
     # Wood shelf texture with grain
     run("magick -size 256x256 xc:'#623b1c' -sparse-color Barycentric '0,0 #623b1c 256,256 #3a220d' -attenuate 0.2 +noise Multiplicative TheSupermarket/assets/textures/shelf_tex.png")
     # Poop texture with swirl and grit

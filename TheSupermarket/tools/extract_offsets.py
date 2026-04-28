@@ -2,7 +2,6 @@ import subprocess
 import json
 import sys
 import os
-import re
 
 def extract_offsets(binary_path, output_json):
     if not os.path.exists(binary_path):
@@ -24,62 +23,49 @@ def extract_offsets(binary_path, output_json):
                 name = " ".join(parts[2:])
                 symbols[name] = f"0x{addr}"
 
-        # Find the GameStateMachine singleton instance
-        # Typically looks like: GameStateMachine::Get()::instance
-        gsm_instance = None
+        # Revamped Internal Offsets for GlobalContext
+        global_ctx_instance = None
         for name, addr in symbols.items():
-            if "GameStateMachine::Get()::instance" in name or "GameStateMachine::state_" in name:
-                gsm_instance = addr
+            if "GlobalContext::Get()::instance" in name:
+                global_ctx_instance = addr
                 break
         
-        # Define manual offsets for GameStateData members based on GameState.h
-        # (Assuming 4-byte alignment/size for enums/floats/ints)
-        game_state_offsets = {
-            "currentScene": "0x0",
-            "previousScene": "0x4",
-            "loadProgress": "0x8",
-            "day1Task": "0xC",
-            "day5Task": "0x10",
-            "day1TasksDone": "0x14",
-            "day5TasksDone": "0x18",
-            "hasCarKeys": "0x1C",
-            "hasPistol": "0x1D",
-            "antoniFocusedOnPlayer": "0x1E",
-            "fearLevel": "0x20",
-            "antoniChasing": "0x24",
-            "isPaused": "0x25",
-            "playTime": "0x28",
-            "deathCount": "0x2C",
-            "isSlipping": "0x30",
-            "slipTimer": "0x34",
-            "masterVolume": "0x38",
-            "mouseSensitivity": "0x3C",
-            "calebAlive": "0x44",
-            "williamAlive": "0x45",
-            "guilhermeAlive": "0x46"
+        # Define layouts for internal systems
+        global_ctx_offsets = {
+            "gsm": "0x0",
+            "audio": "0x8",
+            "input": "0x10",
+            "ui": "0x18",
+            "camera": "0x20",
+            "market": "0x28",
+            "antoni": "0x30",
+            "tasks": "0x38",
+            "events": "0x40",
+            "particles": "0x48",
+            "post": "0x50"
         }
 
         datamodel = {
-            "GameDatamodel": {
-                "Base": gsm_instance if gsm_instance else "0x0",
-                "Description": "Memory map for The Supermarket Game State",
+            "Internal_Offsets": {
+                "GlobalContext_Base": global_ctx_instance if global_ctx_instance else "0x0",
+                "GlobalContext_Layout": global_ctx_offsets,
+                "GameStateMachine_State": symbols.get("GameStateMachine::state_", "Not Found"),
                 "Singletons": {
-                    "GameStateMachine": gsm_instance
-                },
-                "Offsets": {
-                    "GameStateData": game_state_offsets
-                },
-                "Symbols": {
-                    "main": symbols.get("main", "Not Found"),
                     "AudioManager": symbols.get("AudioManager::Get()::instance", "Not Found"),
-                    "InputManager": symbols.get("InputManager::Get()::instance", "Not Found")
+                    "InputManager": symbols.get("InputManager::Get()::instance", "Not Found"),
+                    "GlobalContext": global_ctx_instance
+                },
+                "Core_Functions": {
+                    "main": symbols.get("main", "Not Found"),
+                    "GameStateMachine_TransitionTo": [k for k in symbols if "GameStateMachine::TransitionTo" in k],
+                    "AntoniAI_Update": [k for k in symbols if "AntoniAI::Update" in k]
                 }
             }
         }
         
         with open(output_json, 'w') as f:
             json.dump(datamodel, f, indent=4)
-        print(f"Improved offsets extracted to {output_json}")
+        print(f"Internal offsets extracted to {output_json}")
 
     except Exception as e:
         print(f"An error occurred: {e}")

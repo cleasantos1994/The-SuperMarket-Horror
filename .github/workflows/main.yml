@@ -79,7 +79,7 @@ jobs:
 
       - name: Extract Offsets
         run: |
-          python3 TheSupermarket/tools/extract_offsets.py build/TheSupermarket build/offsets.json
+          python3 TheSupermarket/tools/extract_offsets.py build/TheSupermarket build/internal_offsets.json
 
       - name: Upload PC Binary Artifact
         uses: actions/upload-artifact@v4
@@ -87,11 +87,11 @@ jobs:
           name: the-supermarket-pc-binary
           path: build/TheSupermarket
 
-      - name: Upload Offsets JSON Artifact
+      - name: Upload Internal Offsets JSON Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: memory-offsets
-          path: build/offsets.json
+          name: internal-memory-offsets
+          path: build/internal_offsets.json
 
   release:
     needs: [android-build, pc-build]

@@ -65,12 +65,17 @@ int main(int argc, char* argv[]) {
     auto& state  = GameStateMachine::Get().Data();
     auto& audio  = AudioManager::Get();
     auto& input  = InputManager::Get();
+    
+    GlobalContext::Get().Init();
     audio.Init();
     input.Init();
     SaveLoad::LoadSettings(state);
 
     UIRenderer    ui;    ui.Init(W, H);
     PostProcess   post;  post.Init(W, H);
+
+    GlobalContext::Get().ui = &ui;
+    GlobalContext::Get().post = &post;
 
     Camera*        cam       = nullptr;
     MarketMap*     market    = nullptr;
@@ -131,6 +136,16 @@ int main(int argc, char* argv[]) {
                 tasks->InitDay1Tasks();
                 events   = new EventManager();
                 particles= new ParticleSystem(1024);
+                
+                // Revamped Internal System: Store pointers in GlobalContext
+                auto& ctx = GlobalContext::Get();
+                ctx.camera = cam;
+                ctx.market = market;
+                ctx.antoni = antoni;
+                ctx.tasks  = tasks;
+                ctx.events = events;
+                ctx.particles = particles;
+
                 worldShader = new Shader(
                     "assets/shaders/world/world.vert",
                     "assets/shaders/world/world.frag");
