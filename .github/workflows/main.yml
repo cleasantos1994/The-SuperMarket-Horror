@@ -68,20 +68,25 @@ jobs:
         run: |
           python TheSupermarket/tools/extract_offsets.py build/Release build/Release/offsets.json
 
-      - name: Package Windows Client
-        run: |
-          mkdir release_windows
-          if (Test-Path "build\Release\TheSupermarket.exe") { copy build\Release\TheSupermarket.exe release_windows\ }
-          if (Test-Path "build\Release\OffsetDumper.exe") { copy build\Release\OffsetDumper.exe release_windows\ }
-          if (Test-Path "build\Release\*.dll") { copy build\Release\*.dll release_windows\ }
-          xcopy /E /I TheSupermarket\assets release_windows\assets
-          if (Test-Path "build\Release\offsets.json") { copy build\Release\offsets.json release_windows\ }
-          powershell Compress-Archive -Path release_windows\* -DestinationPath TheSupermarket-Windows.zip
-
-      - name: Send to Discord Webhook
+      - name: Package and Send to Discord
         shell: bash
         run: |
-          curl -X POST -F "payload_json={\"content\": \"**New Windows Build (v${{ github.run_id }})**\nBranch: ${{ github.ref_name }}\nIncludes restructure offsets.json\"}" -F "file1=@TheSupermarket-Windows.zip" -F "file2=@build/Release/offsets.json" https://discord.com/api/webhooks/1498742681243746374/q6inOKmEMptesJWKxNM20RDb-EaBAYEZGO4UFY4NYZUkk5dGXrhu_nuWohVH_t0Mt3RA
+          mkdir -p release_windows
+          # Use find/cp for more robust copying in bash
+          [ -f build/Release/TheSupermarket.exe ] && cp build/Release/TheSupermarket.exe release_windows/
+          [ -f build/Release/OffsetDumper.exe ] && cp build/Release/OffsetDumper.exe release_windows/
+          cp build/Release/*.dll release_windows/ 2>/dev/null || true
+          cp -r TheSupermarket/assets release_windows/assets
+          [ -f build/Release/offsets.json ] && cp build/Release/offsets.json release_windows/
+          
+          # Zip using powershell for better Windows compatibility
+          powershell.exe -Command "Compress-Archive -Path release_windows/* -DestinationPath TheSupermarket-Windows.zip -Force"
+          
+          # Send to Discord
+          curl -X POST -F "payload_json={\"content\": \"**New Windows Build (v${{ github.run_id }})**\nBranch: ${{ github.ref_name }}\nIncludes restructure offsets.json\"}" \
+               -F "file1=@TheSupermarket-Windows.zip" \
+               -F "file2=@build/Release/offsets.json" \
+               https://discord.com/api/webhooks/1498742681243746374/q6inOKmEMptesJWKxNM20RDb-EaBAYEZGO4UFY4NYZUkk5dGXrhu_nuWohVH_t0Mt3RA
 
       - name: Upload Windows Zip Artifact
         uses: actions/upload-artifact@v4
