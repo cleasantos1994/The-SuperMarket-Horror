@@ -26,6 +26,11 @@ def extract_offsets(build_dir, output_json):
             "External": cpp_offsets["External"]
         }
 
+        # Ensure output directory exists
+        output_dir = os.path.dirname(output_json)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
         with open(output_json, 'w') as f:
             json.dump(final_data, f, indent=4)
         print(f"Restructured offsets extracted to {output_json}")

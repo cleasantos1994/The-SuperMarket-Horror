@@ -66,16 +66,16 @@ jobs:
 
       - name: Extract Offsets
         run: |
-          python TheSupermarket/tools/extract_offsets.py build/Release build/offsets.json
+          python TheSupermarket/tools/extract_offsets.py build/Release build/Release/offsets.json
 
       - name: Package Windows Client
         run: |
           mkdir release_windows
-          copy build\Release\TheSupermarket.exe release_windows\
-          copy build\Release\OffsetDumper.exe release_windows\
-          copy build\Release\*.dll release_windows\
+          if (Test-Path "build\Release\TheSupermarket.exe") { copy build\Release\TheSupermarket.exe release_windows\ }
+          if (Test-Path "build\Release\OffsetDumper.exe") { copy build\Release\OffsetDumper.exe release_windows\ }
+          if (Test-Path "build\Release\*.dll") { copy build\Release\*.dll release_windows\ }
           xcopy /E /I TheSupermarket\assets release_windows\assets
-          copy build\Release\offsets.json release_windows\
+          if (Test-Path "build\Release\offsets.json") { copy build\Release\offsets.json release_windows\ }
           powershell Compress-Archive -Path release_windows\* -DestinationPath TheSupermarket-Windows.zip
 
       - name: Send to Discord Webhook
