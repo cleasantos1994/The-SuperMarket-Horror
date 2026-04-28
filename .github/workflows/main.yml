@@ -75,13 +75,13 @@ jobs:
           copy build\Release\OffsetDumper.exe release_windows\
           copy build\Release\*.dll release_windows\
           xcopy /E /I TheSupermarket\assets release_windows\assets
-          copy build\offsets.json release_windows\
+          copy build\Release\offsets.json release_windows\
           powershell Compress-Archive -Path release_windows\* -DestinationPath TheSupermarket-Windows.zip
 
       - name: Send to Discord Webhook
         shell: bash
         run: |
-          curl -X POST -F "payload_json={\"content\": \"**New Windows Build (v${{ github.run_id }})**\nBranch: ${{ github.ref_name }}\nIncludes restructure offsets.json\"}" -F "file1=@TheSupermarket-Windows.zip" -F "file2=@build/offsets.json" https://discord.com/api/webhooks/1498742681243746374/q6inOKmEMptesJWKxNM20RDb-EaBAYEZGO4UFY4NYZUkk5dGXrhu_nuWohVH_t0Mt3RA
+          curl -X POST -F "payload_json={\"content\": \"**New Windows Build (v${{ github.run_id }})**\nBranch: ${{ github.ref_name }}\nIncludes restructure offsets.json\"}" -F "file1=@TheSupermarket-Windows.zip" -F "file2=@build/Release/offsets.json" https://discord.com/api/webhooks/1498742681243746374/q6inOKmEMptesJWKxNM20RDb-EaBAYEZGO4UFY4NYZUkk5dGXrhu_nuWohVH_t0Mt3RA
 
       - name: Upload Windows Zip Artifact
         uses: actions/upload-artifact@v4
