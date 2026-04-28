@@ -26,16 +26,10 @@ jobs:
         with:
           gradle-version: 8.2
 
-      - name: Install SDK and Build Tools
+      - name: Install Android SDK Components
         run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick ffmpeg espeak
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" "ndk;25.2.9519653" "cmake;3.22.1"
-
-      - name: Generate Real Assets
-        run: |
-          python3 TheSupermarket/tools/generate_real_assets.py
 
       - name: Build with Gradle
         run: |
@@ -60,11 +54,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libsdl2-dev libassimp-dev libglm-dev libgl1-mesa-dev libglu1-mesa-dev imagemagick ffmpeg espeak
-
-      - name: Generate Real Assets
-        run: |
-          python3 TheSupermarket/tools/generate_real_assets.py
+          sudo apt-get install -y libsdl2-dev libassimp-dev libglm-dev libgl1-mesa-dev libglu1-mesa-dev
 
       - name: Configure CMake
         run: |
