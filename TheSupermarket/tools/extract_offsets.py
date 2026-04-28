@@ -4,9 +4,15 @@ import sys
 import os
 
 def extract_offsets(build_dir, output_json):
-    dumper_path = os.path.join(build_dir, "OffsetDumper")
-    if os.name == 'nt':
-        dumper_path += ".exe"
+    build_dir = os.path.abspath(build_dir)
+    output_json = os.path.abspath(output_json)
+    dumper_name = "OffsetDumper.exe" if os.name == 'nt' else "OffsetDumper"
+    dumper_path = os.path.join(build_dir, dumper_name)
+    
+    # Debug: Print paths
+    print(f"Build Dir: {build_dir}")
+    print(f"Dumper Path: {dumper_path}")
+    print(f"Output Path: {output_json}")
         
     if not os.path.exists(dumper_path):
         print(f"Error: {dumper_path} not found. Please build the project first.")

@@ -66,26 +66,30 @@ jobs:
 
       - name: Extract Offsets
         run: |
-          python TheSupermarket/tools/extract_offsets.py build/Release build/Release/offsets.json
+          python TheSupermarket/tools/extract_offsets.py build/Release build/offsets.json
 
       - name: Package and Send to Discord
         shell: bash
         run: |
           mkdir -p release_windows
-          # Use find/cp for more robust copying in bash
-          [ -f build/Release/TheSupermarket.exe ] && cp build/Release/TheSupermarket.exe release_windows/
-          [ -f build/Release/OffsetDumper.exe ] && cp build/Release/OffsetDumper.exe release_windows/
+          # Use wildcards and ignore errors to ensure we grab everything available
+          cp build/Release/*.exe release_windows/ 2>/dev/null || true
           cp build/Release/*.dll release_windows/ 2>/dev/null || true
           cp -r TheSupermarket/assets release_windows/assets
-          [ -f build/Release/offsets.json ] && cp build/Release/offsets.json release_windows/
+          cp build/offsets.json release_windows/ 2>/dev/null || true
           
-          # Zip using powershell for better Windows compatibility
+          # Create ZIP
           powershell.exe -Command "Compress-Archive -Path release_windows/* -DestinationPath TheSupermarket-Windows.zip -Force"
           
+          # Final existence check before curl
+          if [ ! -f "TheSupermarket-Windows.zip" ]; then echo "ZIP MISSING"; exit 1; fi
+          if [ ! -f "build/offsets.json" ]; then echo "OFFSETS MISSING"; exit 1; fi
+
           # Send to Discord
-          curl -X POST -F "payload_json={\"content\": \"**New Windows Build (v${{ github.run_id }})**\nBranch: ${{ github.ref_name }}\nIncludes restructure offsets.json\"}" \
+          curl -X POST -H "Content-Type: multipart/form-data" \
+               -F "payload_json={\"content\": \"**New Windows Build (v${{ github.run_id }})**\nBranch: ${{ github.ref_name }}\"}" \
                -F "file1=@TheSupermarket-Windows.zip" \
-               -F "file2=@build/Release/offsets.json" \
+               -F "file2=@build/offsets.json" \
                https://discord.com/api/webhooks/1498742681243746374/q6inOKmEMptesJWKxNM20RDb-EaBAYEZGO4UFY4NYZUkk5dGXrhu_nuWohVH_t0Mt3RA
 
       - name: Upload Windows Zip Artifact
