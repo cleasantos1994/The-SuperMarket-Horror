@@ -3,15 +3,16 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <vector>
+#include "Player.h"
 
 using json = nlohmann::json;
 
-void SaveLoad::SaveGame(const GameStateData& state) {
+void SaveLoad::SaveGame(const GameStateData& state, const Player& player) {
     json j;
     j["day1TasksDone"] = state.day1TasksDone;
     j["day5TasksDone"] = state.day5TasksDone;
-    j["hasCarKeys"] = state.hasCarKeys;
-    j["fearLevel"] = state.fearLevel;
+    j["hasCarKeys"] = player.inventory.hasCarKeys;
+    j["fearLevel"] = player.fearLevel;
     j["playTime"] = state.playTime;
     j["deathCount"] = state.deathCount;
     j["currentScene"] = static_cast<int>(state.currentScene);
@@ -24,7 +25,7 @@ void SaveLoad::SaveGame(const GameStateData& state) {
     }
 }
 
-bool SaveLoad::LoadGame(GameStateData& state) {
+bool SaveLoad::LoadGame(GameStateData& state, Player& player) {
     SDL_RWops* rw = SDL_RWFromFile("save.json", "r");
     if (!rw) return false;
     
@@ -38,8 +39,8 @@ bool SaveLoad::LoadGame(GameStateData& state) {
         json j = json::parse(buffer.data());
         state.day1TasksDone = j.value("day1TasksDone", 0);
         state.day5TasksDone = j.value("day5TasksDone", 0);
-        state.hasCarKeys = j.value("hasCarKeys", false);
-        state.fearLevel = j.value("fearLevel", 0);
+        player.inventory.hasCarKeys = j.value("hasCarKeys", false);
+        player.fearLevel = j.value("fearLevel", 0);
         state.playTime = j.value("playTime", 0.0f);
         state.deathCount = j.value("deathCount", 0);
         

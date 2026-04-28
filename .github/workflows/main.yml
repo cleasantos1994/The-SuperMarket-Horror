@@ -96,6 +96,7 @@ jobs:
         run: |
           mkdir -p release_pc
           cp build/TheSupermarket release_pc/
+          cp build/OffsetDumper release_pc/
           cp build/*.so release_pc/ || true
           cp -r TheSupermarket/assets release_pc/
           cp build/offsets.json release_pc/

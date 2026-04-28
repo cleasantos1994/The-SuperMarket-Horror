@@ -6,6 +6,8 @@
 #include "GameState.h"
 #include "Camera.h"
 #include "InputManager.h"
+#include "GlobalContext.h"
+#include "Player.h"
 
 void EventManager::RegisterEvent(StoryEvent event) {
     events_.push_back(event);
@@ -42,7 +44,7 @@ void EventManager::RegisterDay5Events(AntoniAI& a, CustomerAI& c, MarketMap& map
 void EventManager::RegisterSecretEvents(AntoniAI& a, CustomerAI& c1, CustomerAI& c2, CustomerAI& c3, MarketMap& map, AudioManager& audio, GameStateMachine& gsm, Camera& cam) {
     // 1. Shooting Antoni
     RegisterEvent({"SHOOT_ANTONI", 
-        [&](){ return gsm.Data().antoniChasing && gsm.Data().hasPistol && InputManager::Get().IsMouseButtonPressed(1); },
+        [&](){ return gsm.Data().antoniChasing && GlobalContext::Get().player->inventory.hasPistol && InputManager::Get().IsMouseButtonPressed(1); },
         [&](){ 
             audio.PlaySFX("assets/audio/sfx_gunshot.wav");
             a.Reset(); 

@@ -46,18 +46,13 @@ struct GameStateData {
     Day5Task   day5Task        = Day5Task::RESTOCK_SHELF_CEREAL;
     int        day1TasksDone   = 0;
     int        day5TasksDone   = 0;
-    bool       hasCarKeys      = false;
-    bool       hasPistol       = false;
     bool       antoniFocusedOnPlayer = false;
 
     // Fear / chase state
-    int        fearLevel       = 0;
     bool       antoniChasing   = false;
     bool       isPaused        = false;
     float      playTime        = 0.0f;
     int        deathCount      = 0;
-    bool       isSlipping      = false;
-    float      slipTimer       = 0.0f;
 
     // Settings
     float      masterVolume    = 0.8f;

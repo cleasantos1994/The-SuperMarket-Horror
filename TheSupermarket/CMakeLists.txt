@@ -101,6 +101,15 @@ else()
     set(MODULES GameCore UserInput UIRenderer SimpleAntiCheat)
 endif()
 
+# Offset Dumper Target (Built as executable for all platforms for internal tooling)
+add_executable(OffsetDumper src/OffsetDumper.cpp)
+if(ANDROID)
+    target_link_libraries(OffsetDumper PRIVATE main)
+else()
+    target_link_libraries(OffsetDumper PRIVATE GameCore UserInput UIRenderer SimpleAntiCheat)
+    list(APPEND MODULES OffsetDumper)
+endif()
+
 # Common configuration for all targets
 macro(configure_game_target target_name)
     target_include_directories(${target_name} PRIVATE
@@ -125,6 +134,7 @@ endmacro()
 
 if(ANDROID)
     configure_game_target(main)
+    configure_game_target(OffsetDumper)
 else()
     foreach(module ${MODULES})
         configure_game_target(${module})

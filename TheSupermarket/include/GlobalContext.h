@@ -4,12 +4,15 @@
 #include "InputManager.h"
 #include "UIRenderer.h"
 #include "Camera.h"
+#include "Player.h"
+#include "CustomerAI.h"
 #include "MarketMap.h"
 #include "AntoniAI.h"
 #include "TaskSystem.h"
 #include "EventManager.h"
 #include "ParticleSystem.h"
 #include "PostProcess.h"
+#include <vector>
 
 // The GlobalContext acts as the "Internal" hub of the game.
 // It centralizes all manager pointers for easy access and internal hooking.
@@ -24,7 +27,7 @@ public:
     AudioManager*     audio    = nullptr;
     InputManager*     input    = nullptr;
     UIRenderer*       ui       = nullptr;
-    Camera*           camera   = nullptr;
+    Player*           player   = nullptr;
     MarketMap*        market   = nullptr;
     AntoniAI*         antoni   = nullptr;
     TaskSystem*       tasks    = nullptr;
@@ -32,10 +35,13 @@ public:
     ParticleSystem*   particles= nullptr;
     PostProcess*      post     = nullptr;
 
+    std::vector<CustomerAI*> activeCustomers;
+
     void Init() {
         gsm = &GameStateMachine::Get();
         audio = &AudioManager::Get();
         input = &InputManager::Get();
+        if (!player) player = new Player();
     }
 
 private:

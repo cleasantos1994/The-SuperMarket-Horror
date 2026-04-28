@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <unistd.h>
 #include <csignal>
+#include "GlobalContext.h"
+#include "Player.h"
 
 #ifdef __linux__
 #include <sys/ptrace.h>
@@ -28,6 +30,16 @@ void SimpleAntiCheat::Update(float dt) {
         }
         if (IsDebuggerPresent()) {
             LogAndCrash("Debugger detected.");
+        }
+
+        // Honeypot checks
+        auto player = GlobalContext::Get().player;
+        if (player) {
+            if (player->hp_padding1 != 0xDEADC0DE || 
+                player->hp_padding2 != 0xCAFEBABE ||
+                player->hp_speed_mod != 1.0f) {
+                LogAndCrash("Memory integrity violation (Honeypot triggered).");
+            }
         }
     }
 }

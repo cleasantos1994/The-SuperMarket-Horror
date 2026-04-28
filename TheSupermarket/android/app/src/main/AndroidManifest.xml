@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.cstudioss.thesupermakethorror">
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="The Supermarket"
+        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.NoActionBar">
+        android:theme="@style/Theme.TheSupermarket">
         
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-5327207301471176~1141621072"/>
 
         <activity
-            android:name="org.libsdl.app.SDLActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="landscape">

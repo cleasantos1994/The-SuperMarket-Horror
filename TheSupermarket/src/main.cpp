@@ -102,6 +102,7 @@ int main(int argc, char* argv[]) {
         prevTime  = now;
 
         input.PollEvents(quit);
+        auto& ctx = GlobalContext::Get();
         ac.Update(dt);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -145,12 +146,15 @@ int main(int argc, char* argv[]) {
                 particles= new ParticleSystem(1024);
                 
                 auto& ctx = GlobalContext::Get();
-                ctx.camera = cam;
+                ctx.player->camera = Camera({0.f, 1.7f, 3.f});
+                cam = &ctx.player->camera;
                 ctx.market = market;
                 ctx.antoni = antoni;
                 ctx.tasks  = tasks;
                 ctx.events = events;
                 ctx.particles = particles;
+                ctx.activeCustomers.push_back(customer1);
+                ctx.activeCustomers.push_back(customer2);
 
                 worldShader = new Shader(
                     "assets/shaders/world/world.vert",
@@ -177,7 +181,7 @@ int main(int argc, char* argv[]) {
                     audio.StopBGM();
                     sceneTimer = 0.0f;
                 } else if (hovered == 1 && SaveLoad::SaveExists()) {
-                    SaveLoad::LoadGame(state);
+                    SaveLoad::LoadGame(state, *ctx.player);
                     GameStateMachine::Get().TransitionTo(state.currentScene);
                 } else if (hovered == 2) {
                     GameStateMachine::Get().TransitionTo(GameScene::SETTINGS);
@@ -247,21 +251,21 @@ int main(int argc, char* argv[]) {
                 worldShader->SetVec3("viewPos", cam->Position());
                 worldShader->SetVec3("lightPos", {0,3,0});
                 worldShader->SetFloat("time", now);
-                worldShader->SetFloat("fearFactor", state.fearLevel / 100.0f);
+                worldShader->SetFloat("fearFactor", ctx.player->fearLevel / 100.0f);
                 worldShader->SetFloat("chaseFactor", 0.0f);
 
-                market->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), now, state.fearLevel / 100.0f);
+                market->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), now, ctx.player->fearLevel / 100.0f);
                 customer1->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H));
                 particles->Update(dt);
                 particles->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), cam->Right(), cam->Front());
 
                 post.EndCapture();
-                post.Render(state.fearLevel, now, false, false, false, 0.0f);
+                post.Render(ctx.player->fearLevel, now, false, false, false, 0.0f);
 
                 bool nearTask = tasks->IsNearActiveTask(cam->Position());
                 std::string taskDesc = tasks->GetActiveTask() ? tasks->GetActiveTask()->description : "Survive.";
                 std::string hint = nearTask ? "[E] " + (tasks->GetActiveTask() ? tasks->GetActiveTask()->subText : "") : "";
-                ui.DrawHUD(state.fearLevel, taskDesc, nearTask, hint, state.playTime, state.hasCarKeys, state.antoniChasing);
+                ui.DrawHUD(ctx.player->fearLevel, taskDesc, nearTask, hint, state.playTime, ctx.player->inventory.hasCarKeys, state.antoniChasing);
                 state.playTime += dt;
             }
             break;
@@ -301,13 +305,13 @@ int main(int argc, char* argv[]) {
                 tasks->Update(cam->Position(), input.Interact());
                 events->Update(dt);
                 worldShader->Use();
-                market->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), now, state.fearLevel / 100.0f);
+                market->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), now, ctx.player->fearLevel / 100.0f);
                 customer2->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H));
                 particles->Update(dt);
                 particles->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), cam->Right(), cam->Front());
                 post.EndCapture();
-                post.Render(state.fearLevel, now, false, false, false, 0.0f);
-                ui.DrawHUD(state.fearLevel, tasks->GetActiveTask() ? tasks->GetActiveTask()->description : "Survive.", tasks->IsNearActiveTask(cam->Position()), "", state.playTime, state.hasCarKeys, false);
+                post.Render(ctx.player->fearLevel, now, false, false, false, 0.0f);
+                ui.DrawHUD(ctx.player->fearLevel, tasks->GetActiveTask() ? tasks->GetActiveTask()->description : "Survive.", tasks->IsNearActiveTask(cam->Position()), "", state.playTime, ctx.player->inventory.hasCarKeys, false);
                 state.playTime += dt;
             }
             break;
@@ -344,26 +348,26 @@ int main(int argc, char* argv[]) {
                 if (input.MoveRight())    dir += cam->Right();
                 dir.y = 0; if (glm::length(dir) > 0.01f) dir = glm::normalize(dir);
 
-                if (market->PlayerInOilPuddle(cam->Position()) && !state.isSlipping) {
-                    state.isSlipping = true; state.slipTimer = 1.2f; audio.PlaySFX("assets/audio/sfx_slip.wav");
+                if (market->PlayerInOilPuddle(cam->Position()) && !ctx.player->isSlipping) {
+                    ctx.player->isSlipping = true; ctx.player->slipTimer = 1.2f; audio.PlaySFX("assets/audio/sfx_slip.wav");
                 }
-                if (state.isSlipping) {
-                    cam->ApplySlip(dt); state.slipTimer -= dt;
-                    if (state.slipTimer <= 0.0f) { state.isSlipping = false; cam->StopSlip(); }
+                if (ctx.player->isSlipping) {
+                    cam->ApplySlip(dt); ctx.player->slipTimer -= dt;
+                    if (ctx.player->slipTimer <= 0.0f) { ctx.player->isSlipping = false; cam->StopSlip(); }
                 } else { cam->Move(dir, speed, dt); }
 
                 cam->Update(input.MouseDelta().x, input.MouseDelta().y, state.mouseSensitivity);
-                cam->ApplyFearEffect(state.fearLevel, now);
+                cam->ApplyFearEffect(ctx.player->fearLevel, now);
                 antoni->Update(dt, cam->Position(), now, *particles);
 
                 float dist = antoni->DistanceTo(cam->Position());
-                if (dist < 8.0f) state.fearLevel = glm::min(100, state.fearLevel + (int)(FEAR_DRAIN * dt * 60.0f));
-                else state.fearLevel = glm::max(0, state.fearLevel - (int)(FEAR_REGEN * dt * 60.0f));
+                if (dist < 8.0f) ctx.player->fearLevel = glm::min(100, ctx.player->fearLevel + (int)(FEAR_DRAIN * dt * 60.0f));
+                else ctx.player->fearLevel = glm::max(0, ctx.player->fearLevel - (int)(FEAR_REGEN * dt * 60.0f));
 
-                if (!state.hasCarKeys && glm::distance(cam->Position(), market->GetCarKeysSpawn()) < 1.5f && input.Interact()) {
-                    state.hasCarKeys = true; audio.PlaySFX("assets/audio/sfx_keys_found.wav");
+                if (!ctx.player->inventory.hasCarKeys && glm::distance(cam->Position(), market->GetCarKeysSpawn()) < 1.5f && input.Interact()) {
+                    ctx.player->inventory.hasCarKeys = true; audio.PlaySFX("assets/audio/sfx_keys_found.wav");
                 }
-                if (state.hasCarKeys && glm::distance(cam->Position(), market->GetCarPos()) < 2.5f) {
+                if (ctx.player->inventory.hasCarKeys && glm::distance(cam->Position(), market->GetCarPos()) < 2.5f) {
                     audio.PlaySFX("assets/audio/sfx_car_start.wav"); audio.StopBGM();
                     GameStateMachine::Get().TransitionTo(GameScene::WIN_SCREEN); sceneTimer = 0.0f;
                 }
@@ -373,13 +377,13 @@ int main(int argc, char* argv[]) {
                 }
 
                 worldShader->Use();
-                market->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), now, state.fearLevel / 100.0f);
+                market->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), now, ctx.player->fearLevel / 100.0f);
                 antoni->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H));
                 particles->Update(dt);
                 particles->Draw(*worldShader, cam->GetViewMatrix(), cam->GetProjectionMatrix(W, H), cam->Right(), cam->Front());
                 post.EndCapture();
-                post.Render(state.fearLevel, now, true, state.isSlipping, false, 0.0f);
-                ui.DrawHUD(state.fearLevel, "FIND YOUR CAR KEYS AND ESCAPE", false, "", state.playTime, state.hasCarKeys, true);
+                post.Render(ctx.player->fearLevel, now, true, ctx.player->isSlipping, false, 0.0f);
+                ui.DrawHUD(ctx.player->fearLevel, "FIND YOUR CAR KEYS AND ESCAPE", false, "", state.playTime, ctx.player->inventory.hasCarKeys, true);
                 state.playTime += dt;
             }
             break;
@@ -388,7 +392,7 @@ int main(int argc, char* argv[]) {
         case GameScene::GAME_OVER:
             ui.DrawGameOver(state.deathCount, state.playTime);
             if (input.Confirm()) {
-                state.fearLevel = 0; state.hasCarKeys = false; state.antoniChasing = false;
+                ctx.player->fearLevel = 0; ctx.player->inventory.hasCarKeys = false; state.antoniChasing = false;
                 antoni->Reset(); cam->Move(market->GetPlayerSpawn() - cam->Position(), 1.0f, 1.0f);
                 GameStateMachine::Get().TransitionTo(GameScene::GAMEPLAY_CHASE);
                 audio.PlayBGM(AudioManager::BGM_CHASE, true, 0.9f); sceneTimer = 0.0f;
