@@ -8,6 +8,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(FetchContent)
 
+# Dependencies
 # SDL2
 find_package(SDL2 QUIET)
 if(NOT SDL2_FOUND)
@@ -44,49 +45,82 @@ else()
     set(ASSIMP_LIBRARIES assimp)
 endif()
 
-# miniaudio
-FetchContent_Declare(miniaudio
-  URL https://raw.githubusercontent.com/mackron/miniaudio/master/miniaudio.h
-  DOWNLOAD_NO_EXTRACT TRUE
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/extern/miniaudio)
-FetchContent_MakeAvailable(miniaudio)
-
-# stb
-FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git GIT_TAG master)
-FetchContent_MakeAvailable(stb)
-
 # nlohmann/json
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
-    FetchContent_Declare(nlohmann_json
-      GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.3)
+    FetchContent_Declare(nlohmann_json GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.3)
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+# Core Module (Game Logic)
+set(CORE_SOURCES 
+    src/AntoniAI.cpp 
+    src/AudioManager.cpp 
+    src/Camera.cpp 
+    src/CustomerAI.cpp 
+    src/EventManager.cpp 
+    src/MarketMap.cpp 
+    src/ModelLoader.cpp 
+    src/ParticleSystem.cpp 
+    src/PostProcess.cpp 
+    src/SaveLoad.cpp 
+    src/Shader.cpp 
+    src/TaskSystem.cpp
+)
+
+# Input Module
+set(INPUT_SOURCES src/InputManager.cpp)
+
+# UI Module
+set(UI_SOURCES src/UIRenderer.cpp)
+
+# Anti-Cheat Module
+set(AC_SOURCES src/SimpleAntiCheat.cpp)
 
 if(ANDROID)
-    add_library(main SHARED ${SOURCES})
+    # On Android, combine everything into one libmain.so for simplicity
+    add_library(main SHARED ${CORE_SOURCES} ${INPUT_SOURCES} ${UI_SOURCES} ${AC_SOURCES} src/main.cpp)
     set(GAME_TARGET main)
 else()
-    add_executable(TheSupermarket ${SOURCES})
+    # PC Version: Modular Shared Libraries
+    add_library(UserInput SHARED ${INPUT_SOURCES})
+    add_library(UIRenderer SHARED ${UI_SOURCES})
+    add_library(SimpleAntiCheat SHARED ${AC_SOURCES})
+    add_library(GameCore SHARED ${CORE_SOURCES})
+    
+    add_executable(TheSupermarket src/main.cpp)
+    target_link_libraries(TheSupermarket PRIVATE GameCore UserInput UIRenderer SimpleAntiCheat)
     set(GAME_TARGET TheSupermarket)
+    
+    # Define module list for later linking
+    set(MODULES GameCore UserInput UIRenderer SimpleAntiCheat)
 endif()
 
-target_include_directories(${GAME_TARGET} PRIVATE
-  ${CMAKE_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/extern/miniaudio
-  ${stb_SOURCE_DIR}
-  ${glad_SOURCE_DIR}/include)
+# Common configuration for all targets
+macro(configure_game_target target_name)
+    target_include_directories(${target_name} PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/extern/miniaudio
+        ${stb_SOURCE_DIR}
+        ${glad_SOURCE_DIR}/include
+    )
+    target_link_libraries(${target_name} PRIVATE
+        ${SDL2_LIBRARIES} glad ${ASSIMP_LIBRARIES} nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS}
+    )
+    if(TARGET glm::glm)
+        target_link_libraries(${target_name} PRIVATE glm::glm)
+    elseif(TARGET glm)
+        target_link_libraries(${target_name} PRIVATE glm)
+    endif()
+endmacro()
 
-target_link_libraries(${GAME_TARGET} PRIVATE
-  ${SDL2_LIBRARIES} glad ${ASSIMP_LIBRARIES} nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS})
-
-# Handle GLM target vs system include
-if(TARGET glm::glm)
-    target_link_libraries(${GAME_TARGET} PRIVATE glm::glm)
-elseif(TARGET glm)
-    target_link_libraries(${GAME_TARGET} PRIVATE glm)
+if(ANDROID)
+    configure_game_target(main)
+else()
+    foreach(module ${MODULES})
+        configure_game_target(${module})
+    endforeach()
+    configure_game_target(TheSupermarket)
 endif()
 
 if(NOT ANDROID)

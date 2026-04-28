@@ -18,6 +18,7 @@
 #include "PostProcess.h"
 #include "SaveLoad.h"
 #include "GlobalContext.h"
+#include "AntiCheat.h"
 
 static constexpr int   W            = 1280;
 static constexpr int   H            = 720;
@@ -66,10 +67,12 @@ int main(int argc, char* argv[]) {
     auto& state  = GameStateMachine::Get().Data();
     auto& audio  = AudioManager::Get();
     auto& input  = InputManager::Get();
+    auto& ac     = SimpleAntiCheat::Get();
     
     GlobalContext::Get().Init();
     audio.Init();
     input.Init();
+    ac.Init();
     SaveLoad::LoadSettings(state);
 
     UIRenderer    ui;    ui.Init(W, H);
@@ -97,6 +100,7 @@ int main(int argc, char* argv[]) {
         prevTime  = now;
 
         input.PollEvents(quit);
+        ac.Update(dt);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (input.IsKeyPressed(SDL_SCANCODE_ESCAPE)) {

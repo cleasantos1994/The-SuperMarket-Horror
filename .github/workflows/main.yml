@@ -6,6 +6,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   android-build:
     runs-on: ubuntu-latest
@@ -36,7 +39,6 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: 8.2
-          # gradle-build-action handles caching for ~/.gradle automatically
 
       - name: Install Android SDK Components
         run: |
@@ -47,7 +49,8 @@ jobs:
         run: |
           cd TheSupermarket/android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          # Optimize: Build only arm64-v8a to save time
+          ./gradlew assembleDebug -Pandroid.bundle.abiFilters=arm64-v8a
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -63,26 +66,16 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Cache APT packages
-        uses: actions/cache@v3
-        with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-
-
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libsdl2-dev libassimp-dev libglm-dev libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt-get install -y libsdl2-dev libassimp-dev libglm-dev libgl1-mesa-dev libglu1-mesa-dev zip
 
       - name: Cache CMake FetchContent
         uses: actions/cache@v3
         with:
           path: build/_deps
           key: ${{ runner.os }}-cmake-deps-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cmake-deps-
 
       - name: Configure CMake
         run: |
@@ -97,19 +90,28 @@ jobs:
 
       - name: Extract Offsets
         run: |
-          python3 TheSupermarket/tools/extract_offsets.py build/TheSupermarket build/internal_offsets.json
+          python3 TheSupermarket/tools/extract_offsets.py build build/offsets.json
 
-      - name: Upload PC Binary Artifact
+      - name: Package PC Client
+        run: |
+          mkdir -p release_pc
+          cp build/TheSupermarket release_pc/
+          cp build/*.so release_pc/ || true
+          cp -r TheSupermarket/assets release_pc/
+          cp build/offsets.json release_pc/
+          zip -r TheSupermarket-PC.zip release_pc/
+
+      - name: Upload PC Zip Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: the-supermarket-pc-binary
-          path: build/TheSupermarket
+          name: the-supermarket-pc-client
+          path: TheSupermarket-PC.zip
 
-      - name: Upload Internal Offsets JSON Artifact
+      - name: Upload Offsets JSON Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: internal-memory-offsets
-          path: build/internal_offsets.json
+          name: memory-offsets
+          path: build/offsets.json
 
   release:
     needs: [android-build, pc-build]
@@ -132,7 +134,7 @@ jobs:
           prerelease: false
           files: |
             artifacts/**/*.apk
-            artifacts/**/TheSupermarket
+            TheSupermarket-PC.zip
             artifacts/**/*.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
