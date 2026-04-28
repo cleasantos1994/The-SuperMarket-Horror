@@ -84,7 +84,7 @@ target_link_libraries(${GAME_TARGET} PRIVATE
 # Handle GLM target vs system include
 if(TARGET glm::glm)
     target_link_libraries(${GAME_TARGET} PRIVATE glm::glm)
-elif(TARGET glm)
+elseif(TARGET glm)
     target_link_libraries(${GAME_TARGET} PRIVATE glm)
 endif()
 
