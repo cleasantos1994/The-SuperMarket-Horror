@@ -102,8 +102,8 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/the-supermarket-debug-apk/app-debug.apk
-            artifacts/the-supermarket-pc-binary/TheSupermarket
-            artifacts/memory-offsets/offsets.json
+            artifacts/**/*.apk
+            artifacts/**/TheSupermarket
+            artifacts/**/*.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
