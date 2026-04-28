@@ -24,17 +24,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Cache Android SDK
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-            /usr/local/lib/android/sdk/platforms/android-34
-            /usr/local/lib/android/sdk/build-tools/34.0.0
-            /usr/local/lib/android/sdk/ndk/25.2.9519653
-          key: ${{ runner.os }}-android-sdk-34-ndk-25
-
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
@@ -49,7 +38,6 @@ jobs:
         run: |
           cd TheSupermarket/android
           chmod +x gradlew
-          # Optimize: Build only arm64-v8a to save time
           ./gradlew assembleDebug -Pandroid.bundle.abiFilters=arm64-v8a
 
       - name: Upload APK Artifact
@@ -58,64 +46,51 @@ jobs:
           name: the-supermarket-debug-apk
           path: TheSupermarket/android/app/build/outputs/apk/debug/app-debug.apk
 
-  pc-build:
-    runs-on: ubuntu-latest
-    continue-on-error: true
+  windows-build:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libsdl2-dev libassimp-dev libglm-dev libgl1-mesa-dev libglu1-mesa-dev zip
-
-      - name: Cache CMake FetchContent
-        uses: actions/cache@v3
-        with:
-          path: build/_deps
-          key: ${{ runner.os }}-cmake-deps-${{ hashFiles('**/CMakeLists.txt') }}
-
       - name: Configure CMake
         run: |
-          mkdir -p build
+          mkdir build
           cd build
-          cmake ../TheSupermarket -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          cmake ../TheSupermarket -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: |
           cd build
-          make -j$(nproc)
+          cmake --build . --config Release
 
       - name: Extract Offsets
         run: |
-          python3 TheSupermarket/tools/extract_offsets.py build build/offsets.json
+          python TheSupermarket/tools/extract_offsets.py build/Release build/offsets.json
 
-      - name: Package PC Client
+      - name: Package Windows Client
         run: |
-          mkdir -p release_pc
-          cp build/TheSupermarket release_pc/
-          cp build/OffsetDumper release_pc/
-          cp build/*.so release_pc/ || true
-          cp -r TheSupermarket/assets release_pc/
-          cp build/offsets.json release_pc/
-          zip -r TheSupermarket-PC.zip release_pc/
+          mkdir release_windows
+          copy build\Release\TheSupermarket.exe release_windows\
+          copy build\Release\OffsetDumper.exe release_windows\
+          copy build\Release\*.dll release_windows\
+          xcopy /E /I TheSupermarket\assets release_windows\assets
+          copy build\offsets.json release_windows\
+          powershell Compress-Archive -Path release_windows\* -DestinationPath TheSupermarket-Windows.zip
 
-      - name: Upload PC Zip Artifact
+      - name: Send to Discord Webhook
+        shell: bash
+        run: |
+          curl -X POST -F "payload_json={\"content\": \"**New Windows Build (v${{ github.run_id }})**\nBranch: ${{ github.ref_name }}\nIncludes restructure offsets.json\"}" -F "file1=@TheSupermarket-Windows.zip" -F "file2=@build/offsets.json" https://discord.com/api/webhooks/1498742681243746374/q6inOKmEMptesJWKxNM20RDb-EaBAYEZGO4UFY4NYZUkk5dGXrhu_nuWohVH_t0Mt3RA
+
+      - name: Upload Windows Zip Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: the-supermarket-pc-client
-          path: TheSupermarket-PC.zip
-
-      - name: Upload Offsets JSON Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: memory-offsets
-          path: build/offsets.json
+          name: the-supermarket-windows-client
+          path: TheSupermarket-Windows.zip
 
   release:
-    needs: [android-build, pc-build]
+    needs: [android-build, windows-build]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -135,7 +110,7 @@ jobs:
           prerelease: false
           files: |
             artifacts/**/*.apk
-            TheSupermarket-PC.zip
+            TheSupermarket-Windows.zip
             artifacts/**/*.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
