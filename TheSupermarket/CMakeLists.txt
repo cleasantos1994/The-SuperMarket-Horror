@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(MarketHorror_Antoni VERSION 3.0 LANGUAGES CXX)
+project(TheSupermarket VERSION 3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -63,24 +63,33 @@ if(NOT nlohmann_json_FOUND)
 endif()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-add_executable(TheSupermarket ${SOURCES})
 
-target_include_directories(TheSupermarket PRIVATE
+if(ANDROID)
+    add_library(main SHARED ${SOURCES})
+    set(GAME_TARGET main)
+else()
+    add_executable(TheSupermarket ${SOURCES})
+    set(GAME_TARGET TheSupermarket)
+endif()
+
+target_include_directories(${GAME_TARGET} PRIVATE
   ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/extern/miniaudio
   ${stb_SOURCE_DIR}
   ${glad_SOURCE_DIR}/include)
 
-target_link_libraries(TheSupermarket PRIVATE
+target_link_libraries(${GAME_TARGET} PRIVATE
   ${SDL2_LIBRARIES} glad ${ASSIMP_LIBRARIES} nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS})
 
 # Handle GLM target vs system include
 if(TARGET glm::glm)
-    target_link_libraries(TheSupermarket PRIVATE glm::glm)
-elseif(TARGET glm)
-    target_link_libraries(TheSupermarket PRIVATE glm)
+    target_link_libraries(${GAME_TARGET} PRIVATE glm::glm)
+elif(TARGET glm)
+    target_link_libraries(${GAME_TARGET} PRIVATE glm)
 endif()
 
-add_custom_command(TARGET TheSupermarket POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:TheSupermarket>/assets)
+if(NOT ANDROID)
+    add_custom_command(TARGET TheSupermarket POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:TheSupermarket>/assets)
+endif()

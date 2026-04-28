@@ -1,0 +1,93 @@
+CMakeFiles/TheSupermarket.dir/src/ParticleSystem.cpp.o CMakeFiles
+  ld: error: undefined symbol: main
+  >>> referenced by crtbegin.c
+  >>>               /usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o:(_start_main)
+  >>> referenced by crtbegin.c
+  >>>               /usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o:(_start_main)
+  clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+  ninja: build stopped: subcommand failed.
+  
+  C++ build system [build] failed while executing:
+      /usr/local/lib/android/sdk/cmake/3.22.1/bin/ninja \
+        -C \
+        /home/runner/work/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/android/app/.cxx/Debug/3z3ca292/arm64-v8a \
+        SDL2 \
+        TheSupermarket \
+        assimp
+    from /home/runner/work/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/android/app
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+BUILD FAILED in 8m 57s
+Error: Process completed with exit code 1.
+0s
+
+CMakeFiles/TheSupermarket.dir/src/ParticleSystem.cpp.o CMakeFiles
+  ld: error: undefined symbol: main
+  >>> referenced by crtbegin.c
+  >>>               C/C++: INFO Hunter enabled or RT-extension not found. glTF import/export will be built without Open3DGC-compression.
+> Task :app:buildCMakeDebug[arm64-v8a]
+C/C++: ninja: Entering directory `/home/runner/work/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/android/app/.cxx/Debug/3z3ca292/arm64-v8a'
+C/C++: : && /usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++20 -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments   -Wl,--gc-sections CMakeFiles/TheSupermarket.dir/src/AntoniAI.cpp.o CMakeFiles/TheSupermarket.dir/src/AudioManager.cpp.o CMakeFiles/TheSupermarket.dir/src/Camera.cpp.o CMakeFiles/TheSupermarket.dir/src/CustomerAI.cpp.o CMakeFiles/TheSupermarket.dir/src/EventManager.cpp.o CMakeFiles/TheSupermarket.dir/src/InputManager.cpp.o CMakeFiles/TheSupermarket.dir/src/MarketMap.cpp.o CMakeFiles/TheSupermarket.dir/src/ModelLoader.cpp.o CMakeFiles/TheSupermarket.dir/src/ParticleSystem.cpp.o CMake
+C/C++: ld: error: undefined symbol: main
+C/C++: >>> referenced by crtbegin.c
+C/C++: >>>               /usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o:(_start_main)
+C/C++: >>> referenced by crtbegin.c
+C/C++: >>>               /usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o:(_start_main)
+C/C++: clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+C/C++: ninja: build stopped: subcommand failed.
+> Task :app:buildCMakeDebug[arm64-v8a] FAILED
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':app:buildCMakeDebug[arm64-v8a]'.
+> com.android.ide.common.process.ProcessException: ninja: Entering directory `/home/runner/work/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/android/app/.cxx/Debug/3z3ca292/arm64-v8a'
+  [1/524] Generating include/SDL2/SDL_joystick.h
+  [2/524] Generating include/SDL2/SDL_keyboard.h
+  [3/524] Generating include/SDL2/SDL_keycode.h
+  [4/524] Generating include/SDL2/SDL_loadso.h
+  [5/524] Generating include/SDL2/SDL.h
+  [6/524] Generating include/SDL2/SDL_assert.h
+  [7/524] Generating include/SDL2/SDL_atomic.h
+  [8/524] Generating include/SDL2/SDL_audio.h
+  [9/524] Generating include/SDL2/SDL_bits.h
+  [10/524] Generating include/SDL2/SDL_blendmode.h
+  [11/524] Generating include/SDL2/SDL_clipboard.h
+  [12/524] Generating include/SDL2/SDL_cpuinfo.h
+  [13/524] Generating include/SDL2/SDL_copying.h
+  [14/524] Generating include/SDL2/SDL_egl.h
+  [15/524] Generating include/SDL2/SDL_endian.h
+  [16/524] Generating include/SDL2/SDL_error.h
+  [17/524] Generating include/SDL2/SDL_events.h
+  [18/524] Generating include/SDL2/SDL_filesystem.h
+  [19/524] Generating include/SDL2/SDL_gamecontroller.h
+  [20/524] Generating include/SDL2/SDL_gesture.h
+  [21/524] Generating include/SDL2/SDL_guid.h
+  [22/524] Generating include/SDL2/SDL_haptic.h
+28 actionable tasks: 28 executed
+  [23/524] Generating include/SDL2/SDL_hidapi.h
+  [24/524] Generating include/SDL2/SDL_hints.h
+  [25/524] Generating include/SDL2/SDL_locale.h
+  [26/524] Generating include/SDL2/SDL_log.h
+  [27/524] Generating include/SDL2/SDL_main.h
+  [28/524] Generating include/SDL2/SDL_messagebox.h
+  [29/524] Generating include/SDL2/SDL_metal.h
+  [30/524] Generating include/SDL2/SDL_misc.h
+  [31/524] Generating include/SDL2/SDL_mouse.h
+  [32/524] Generating include/SDL2/SDL_mutex.h
+  [33/524] Generating include/SDL2/SDL_name.h
+  [34/524] Generating include/SDL2/SDL_opengl.h
+  [35/524] Generating include/SDL2/SDL_opengles.h
+  [36/524] Generating include/SDL2/SDL_opengl_glext.h
+  [37/524] Generating include/SDL2/SDL_opengles2.h
+  [38/524] Generating include/SDL2/SDL_opengles2_gl2.h
+  [39/524] Generating include/SDL2/SDL_opengles2_gl2platform.h
+  [40/524] Generating include/SDL2/SDL_opengles2_gl2ext.h
+  [41/524] Generating include/SDL2/SDL_opengles2_khrplatform.h
+  [42/524] Generating include/SDL2/SDL_power.h
+  [43/524] Generating include/SDL2/SDL_pixels.h
+  [44/524] Generating include/SDL2/SDL_platform.h
+  [45/524] Generating include/SDL2/SDL_rect.h
+  [46/524] Generating include/SDL2/SDL_quit.h
+
