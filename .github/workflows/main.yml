@@ -21,10 +21,22 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Cache Android SDK
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+            /usr/local/lib/android/sdk/platforms/android-34
+            /usr/local/lib/android/sdk/build-tools/34.0.0
+            /usr/local/lib/android/sdk/ndk/25.2.9519653
+          key: ${{ runner.os }}-android-sdk-34-ndk-25
+
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: 8.2
+          # gradle-build-action handles caching for ~/.gradle automatically
 
       - name: Install Android SDK Components
         run: |
@@ -51,10 +63,26 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Cache APT packages
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
       - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libsdl2-dev libassimp-dev libglm-dev libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Cache CMake FetchContent
+        uses: actions/cache@v3
+        with:
+          path: build/_deps
+          key: ${{ runner.os }}-cmake-deps-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-deps-
 
       - name: Configure CMake
         run: |
