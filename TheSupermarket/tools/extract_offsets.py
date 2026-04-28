@@ -2,17 +2,14 @@ import subprocess
 import json
 import sys
 import os
-import re
 
 def get_symbols(binary_path):
     if not os.path.exists(binary_path):
         return {}
     try:
-        # Use nm -C for demangled symbols, -D for dynamic symbols if it's a shared lib
         cmd = ['nm', '-C', binary_path]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            # Try dynamic if static fails
             cmd = ['nm', '-C', '-D', binary_path]
             result = subprocess.run(cmd, capture_output=True, text=True)
         
@@ -40,63 +37,73 @@ def extract_offsets(build_dir, output_json):
     for lib in lib_paths:
         all_symbols.update(get_symbols(lib))
 
-    global_ctx_instance = None
-    for name, addr in all_symbols.items():
-        if "GlobalContext::Get()::instance" in name:
-            global_ctx_instance = addr
-            break
+    # Find key bases
+    global_ctx = all_symbols.get("GlobalContext::Get()::instance", "0x0")
+    gsm_instance = all_symbols.get("GameStateMachine::Get()::instance", "0x0")
     
-    # "External" / Game State Offsets (based on GameStateData)
-    # These are offsets from the 'state_' member in GameStateMachine
-    game_state_offsets = {
-        "currentScene": "0x0",
-        "previousScene": "0x4",
-        "loadProgress": "0x8",
-        "day1TasksDone": "0x14",
-        "fearLevel": "0x20",
-        "antoniChasing": "0x24",
-        "playTime": "0x28",
-        "hasPistol": "0x1D"
-    }
+    # In our architecture, GameStateMachine::state_ is the first member, 
+    # so GameState_Base == gsm_instance
+    gamestate_base = gsm_instance
 
-    # "Internal" / System Pointers (offsets from GlobalContext base)
-    global_ctx_layout = {
-        "gsm": "0x0",
-        "audio": "0x8",
-        "input": "0x10",
-        "ui": "0x18",
-        "camera": "0x20",
-        "market": "0x28",
-        "antoni": "0x30"
+    # Structure Layouts (Offsets from class base)
+    layouts = {
+        "GlobalContext": {
+            "gsm": "0x0",
+            "audio": "0x8",
+            "input": "0x10",
+            "ui": "0x18",
+            "camera": "0x20",
+            "market": "0x28",
+            "antoni": "0x30",
+            "tasks": "0x38",
+            "events": "0x40"
+        },
+        "GameStateData": {
+            "currentScene": "0x0",
+            "fearLevel": "0x20",
+            "antoniChasing": "0x24",
+            "hasPistol": "0x1D",
+            "playTime": "0x28"
+        },
+        "Camera": {
+            "position": "0x0", # pos_ is first
+            "front": "0xC",
+            "right": "0x24"
+        },
+        "AntoniAI": {
+            "state": "0x8",
+            "position": "0xC",
+            "chaseSpeed": "0x20"
+        }
     }
 
     datamodel = {
         "GameDatamodel": {
-            "Version": "4.0",
-            "Internal": {
-                "GlobalContext_Base": global_ctx_instance if global_ctx_instance else "0x0",
-                "GlobalContext_Layout": global_ctx_layout
+            "Bases": {
+                "GlobalContext": global_ctx,
+                "GameStateMachine": gsm_instance,
+                "GameState_Base": gamestate_base
             },
-            "External": {
-                "GameState_Base": all_symbols.get("GameStateMachine::state_", "Not Found"),
-                "GameState_Offsets": game_state_offsets
+            "Player": {
+                "Camera_Ptr_Offset": layouts["GlobalContext"]["camera"],
+                "Pos_Offset_In_Camera": layouts["Camera"]["position"]
             },
-            "Singletons": {
-                "GameStateMachine": all_symbols.get("GameStateMachine::Get()::instance", "Not Found"),
-                "AudioManager": all_symbols.get("AudioManager::Get()::instance", "Not Found"),
-                "InputManager": all_symbols.get("InputManager::Get()::instance", "Not Found")
+            "Antoni": {
+                "Antoni_Ptr_Offset": layouts["GlobalContext"]["antoni"],
+                "State_Offset": layouts["AntoniAI"]["state"],
+                "Pos_Offset": layouts["AntoniAI"]["position"]
             },
-            "Functions": {
-                "main": all_symbols.get("main", "Not Found"),
-                "AntiCheat_SecurityCheck": [k for k in all_symbols if "SimpleAntiCheat::SecurityCheck" in k],
-                "AntoniAI_Update": [k for k in all_symbols if "AntoniAI::Update" in k]
-            }
+            "Items": {
+                "HasPistol_Offset": layouts["GameStateData"]["hasPistol"],
+                "FearLevel_Offset": layouts["GameStateData"]["fearLevel"]
+            },
+            "Internal_Layouts": layouts
         }
     }
     
     with open(output_json, 'w') as f:
         json.dump(datamodel, f, indent=4)
-    print(f"Comprehensive offsets extracted to {output_json}")
+    print(f"Detailed offsets extracted to {output_json}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
