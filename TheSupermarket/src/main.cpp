@@ -17,6 +17,7 @@
 #include "ParticleSystem.h"
 #include "PostProcess.h"
 #include "SaveLoad.h"
+#include "GlobalContext.h"
 
 static constexpr int   W            = 1280;
 static constexpr int   H            = 720;
