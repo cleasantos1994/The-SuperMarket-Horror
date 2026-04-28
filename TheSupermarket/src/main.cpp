@@ -54,6 +54,8 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return -1;
     }
+    
+    SDL_GL_MakeCurrent(window, glContext);
 
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
@@ -142,7 +144,6 @@ int main(int argc, char* argv[]) {
                 events   = new EventManager();
                 particles= new ParticleSystem(1024);
                 
-                // Revamped Internal System: Store pointers in GlobalContext
                 auto& ctx = GlobalContext::Get();
                 ctx.camera = cam;
                 ctx.market = market;

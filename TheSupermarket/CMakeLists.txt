@@ -45,6 +45,11 @@ else()
     set(ASSIMP_LIBRARIES assimp)
 endif()
 
+# stb
+FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git GIT_TAG master)
+FetchContent_MakeAvailable(stb)
+set(stb_INCLUDE_DIR ${stb_SOURCE_DIR})
+
 # nlohmann/json
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
@@ -101,9 +106,13 @@ macro(configure_game_target target_name)
     target_include_directories(${target_name} PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/extern/miniaudio
-        ${stb_SOURCE_DIR}
+        ${stb_INCLUDE_DIR}
         ${glad_SOURCE_DIR}/include
     )
+    # Ensure stb_INCLUDE_DIR is available even if fetch happens late
+    if(stb_INCLUDE_DIR)
+        target_include_directories(${target_name} PUBLIC ${stb_INCLUDE_DIR})
+    endif()
     target_link_libraries(${target_name} PRIVATE
         ${SDL2_LIBRARIES} glad ${ASSIMP_LIBRARIES} nlohmann_json::nlohmann_json ${CMAKE_DL_LIBS}
     )

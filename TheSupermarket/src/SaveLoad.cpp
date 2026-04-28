@@ -1,7 +1,8 @@
 #include "SaveLoad.h"
 #include <nlohmann/json.hpp>
-#include <fstream>
+#include <SDL2/SDL.h>
 #include <iostream>
+#include <vector>
 
 using json = nlohmann::json;
 
@@ -15,26 +16,37 @@ void SaveLoad::SaveGame(const GameStateData& state) {
     j["deathCount"] = state.deathCount;
     j["currentScene"] = static_cast<int>(state.currentScene);
     
-    std::ofstream file("assets/data/save.json");
-    if (file.is_open()) {
-        file << j.dump(4);
+    std::string data = j.dump(4);
+    SDL_RWops* rw = SDL_RWFromFile("save.json", "w");
+    if (rw) {
+        SDL_RWwrite(rw, data.c_str(), 1, data.size());
+        SDL_RWclose(rw);
     }
 }
 
 bool SaveLoad::LoadGame(GameStateData& state) {
-    std::ifstream file("assets/data/save.json");
-    if (!file.is_open()) return false;
+    SDL_RWops* rw = SDL_RWFromFile("save.json", "r");
+    if (!rw) return false;
     
     try {
-        json j;
-        file >> j;
+        Sint64 size = SDL_RWsize(rw);
+        std::vector<char> buffer(size + 1);
+        SDL_RWread(rw, buffer.data(), 1, size);
+        SDL_RWclose(rw);
+        buffer[size] = '\0';
+
+        json j = json::parse(buffer.data());
         state.day1TasksDone = j.value("day1TasksDone", 0);
         state.day5TasksDone = j.value("day5TasksDone", 0);
         state.hasCarKeys = j.value("hasCarKeys", false);
         state.fearLevel = j.value("fearLevel", 0);
         state.playTime = j.value("playTime", 0.0f);
         state.deathCount = j.value("deathCount", 0);
-        state.currentScene = static_cast<GameScene>(j.value("currentScene", 1));
+        
+        int sceneIdx = j.value("currentScene", 1);
+        if (sceneIdx >= 0 && sceneIdx <= 15) {
+            state.currentScene = static_cast<GameScene>(sceneIdx);
+        }
         return true;
     } catch (...) {
         return false;
@@ -49,19 +61,26 @@ void SaveLoad::SaveSettings(const GameStateData& state) {
     j["vSync"] = state.vSync;
     j["showSubtitles"] = state.showSubtitles;
     
-    std::ofstream file("assets/data/settings.json");
-    if (file.is_open()) {
-        file << j.dump(4);
+    std::string data = j.dump(4);
+    SDL_RWops* rw = SDL_RWFromFile("settings.json", "w");
+    if (rw) {
+        SDL_RWwrite(rw, data.c_str(), 1, data.size());
+        SDL_RWclose(rw);
     }
 }
 
 void SaveLoad::LoadSettings(GameStateData& state) {
-    std::ifstream file("assets/data/settings.json");
-    if (!file.is_open()) return;
+    SDL_RWops* rw = SDL_RWFromFile("settings.json", "r");
+    if (!rw) return;
     
     try {
-        json j;
-        file >> j;
+        Sint64 size = SDL_RWsize(rw);
+        std::vector<char> buffer(size + 1);
+        SDL_RWread(rw, buffer.data(), 1, size);
+        SDL_RWclose(rw);
+        buffer[size] = '\0';
+
+        json j = json::parse(buffer.data());
         state.masterVolume = j.value("masterVolume", 0.8f);
         state.mouseSensitivity = j.value("mouseSensitivity", 0.1f);
         state.fullscreen = j.value("fullscreen", false);
@@ -71,6 +90,10 @@ void SaveLoad::LoadSettings(GameStateData& state) {
 }
 
 bool SaveLoad::SaveExists() {
-    std::ifstream file("assets/data/save.json");
-    return file.good();
+    SDL_RWops* rw = SDL_RWFromFile("save.json", "r");
+    if (rw) {
+        SDL_RWclose(rw);
+        return true;
+    }
+    return false;
 }

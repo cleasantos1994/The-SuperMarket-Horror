@@ -1,6 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include "ModelLoader.h"
+#include <SDL2/SDL.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -25,17 +26,30 @@ void ModelLoader::Draw(const Shader& shader) {
 
 void ModelLoader::LoadModel(const std::string& path) {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    
+    // Using SDL_RWops to load the file into memory first for Assimp
+    SDL_RWops* rw = SDL_RWFromFile(path.c_str(), "rb");
+    if (!rw) {
+        std::cerr << "ERROR::ASSIMP::FILE_NOT_FOUND: " << path << std::endl;
+        return;
+    }
+    Sint64 size = SDL_RWsize(rw);
+    std::vector<unsigned char> buffer(size);
+    SDL_RWread(rw, buffer.data(), 1, size);
+    SDL_RWclose(rw);
+
+    const aiScene* scene = importer.ReadFileFromMemory(buffer.data(), size, 
+                                                      aiProcess_Triangulate | aiProcess_FlipUVs);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+        std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
         return;
     }
 
     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
         aiMesh* aiMesh = scene->mMeshes[i];
         Mesh mesh;
-        mesh.textureID = 0; // Default or load from material
+        mesh.textureID = 0;
         for (unsigned int j = 0; j < aiMesh->mNumVertices; j++) {
             mesh.vertices.push_back(aiMesh->mVertices[j].x);
             mesh.vertices.push_back(aiMesh->mVertices[j].y);
