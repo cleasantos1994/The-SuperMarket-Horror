@@ -65,7 +65,10 @@ jobs:
           cmake --build . --config Release
 
       - name: Extract Offsets
+        shell: bash
         run: |
+          # Collect all DLLs (SDL2, etc) into the dumper's folder so it can start
+          find build -name "*.dll" -exec cp {} build/Release/ \; 2>/dev/null || true
           python TheSupermarket/tools/extract_offsets.py build/Release build/offsets.json
 
       - name: Package and Send to Discord

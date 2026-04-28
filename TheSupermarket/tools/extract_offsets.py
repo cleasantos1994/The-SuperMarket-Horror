@@ -19,8 +19,13 @@ def extract_offsets(build_dir, output_json):
         return
 
     try:
+        # On Windows, we need to ensure the dumper can find its dependent DLLs
+        env = os.environ.copy()
+        if os.name == 'nt':
+            env["PATH"] = build_dir + os.pathsep + env.get("PATH", "")
+
         # Run the C++ offset dumper
-        result = subprocess.run([dumper_path], capture_output=True, text=True, check=True)
+        result = subprocess.run([dumper_path], capture_output=True, text=True, check=True, env=env, cwd=build_dir)
         cpp_offsets = json.loads(result.stdout)
         
         # The Dumper now handles the Internal/External structure.
