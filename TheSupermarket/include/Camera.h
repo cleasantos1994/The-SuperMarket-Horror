@@ -2,7 +2,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-class Camera {
+#include "Export.h"
+
+class GAME_API Camera {
 public:
     Camera(glm::vec3 startPos = {0.f, 1.7f, 0.f},
            float yaw = -90.f, float pitch = 0.f);

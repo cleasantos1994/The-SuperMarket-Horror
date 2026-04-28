@@ -1,0 +1,57 @@
+{
+    "Internal": {
+        "GlobalContext": {
+            "gsm": "0x0",
+            "player": "0x20",
+            "antoni": "0x30",
+            "characters": "0x58"
+        },
+        "Player": {
+            "camera": "0x0",
+            "inventory": "0x4c",
+            "fearLevel": "0x58",
+            "stamina": "0x5c",
+            "isSprinting": "0x60",
+            "isSlipping": "0x61",
+            "slipTimer": "0x64"
+        },
+        "Items": {
+            "hasPistol": "0x0",
+            "hasCarKeys": "0x1",
+            "bullets": "0x4",
+            "oilJugCount": "0x8"
+        },
+        "GameStateData": {
+            "currentScene": "0x0",
+            "playTime": "0x20",
+            "deathCount": "0x24",
+            "antoniChasing": "0x1d"
+        },
+        "Camera": {
+            "position": "0x0",
+            "front": "0xc",
+            "yaw": "0x30",
+            "pitch": "0x34"
+        },
+        "AntoniAI": {
+            "state": "0x8",
+            "position": "0xc",
+            "chaseSpeed": "0x60",
+            "isDisguised": "0x6d",
+            "hasOilJug": "0x6c"
+        },
+        "CustomerAI": {
+            "type": "0x0",
+            "state": "0x4",
+            "position": "0x10",
+            "hasPooped": "0x60"
+        }
+    },
+    "External": {
+        "Bases": {
+            "GlobalContext": "0x5c4b8d4210",
+            "GameStateMachine": "0x5c4b8d41c8",
+            "Player_Base": "0x0"
+        }
+    }
+}

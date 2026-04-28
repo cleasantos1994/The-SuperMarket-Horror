@@ -2,7 +2,9 @@
 #include <string>
 #include <vector>
 
-class SimpleAntiCheat {
+#include "Export.h"
+
+class GAME_API SimpleAntiCheat {
 public:
     static SimpleAntiCheat& Get() {
         static SimpleAntiCheat instance;

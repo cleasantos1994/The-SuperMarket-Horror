@@ -2,7 +2,9 @@
 #include <string>
 #include "GameState.h"
 
-class UIRenderer {
+#include "Export.h"
+
+class GAME_API UIRenderer {
 public:
     bool Init(int screenW, int screenH);
     void Shutdown();

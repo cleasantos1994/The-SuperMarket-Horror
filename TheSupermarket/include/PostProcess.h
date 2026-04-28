@@ -2,7 +2,9 @@
 #include <glad/glad.h>
 #include "Shader.h"
 
-class PostProcess {
+#include "Export.h"
+
+class GAME_API PostProcess {
 public:
     PostProcess();
     bool Init(int w, int h);

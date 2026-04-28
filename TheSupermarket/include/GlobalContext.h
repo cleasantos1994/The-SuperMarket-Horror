@@ -14,9 +14,11 @@
 #include "PostProcess.h"
 #include <vector>
 
+#include "Export.h"
+
 // The GlobalContext acts as the "Internal" hub of the game.
 // It centralizes all manager pointers for easy access and internal hooking.
-class GlobalContext {
+class GAME_API GlobalContext {
 public:
     static GlobalContext& Get() {
         static GlobalContext instance;

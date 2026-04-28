@@ -2,7 +2,9 @@
 #include "GameState.h"
 #include "Player.h"
 
-class SaveLoad {
+#include "Export.h"
+
+class GAME_API SaveLoad {
 public:
     static void SaveGame(const GameStateData& state, const Player& player);
     static bool LoadGame(GameStateData& state, Player& player);

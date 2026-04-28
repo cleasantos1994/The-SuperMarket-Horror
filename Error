@@ -1,0 +1,45 @@
+
+  [522/527] Building C object _deps/assimp-build/code/CMakeFiles/assimp.dir/__/contrib/zip/src/zip.c.o
+  [523/527] Building CXX object _deps/assimp-build/code/CMakeFiles/assimp.dir/AssetLib/FBX/FBXExporter.cpp.o
+  [524/527] Building CXX object _deps/assimp-build/code/CMakeFiles/assimp.dir/__/contrib/clipper/clipper.cpp.o
+  [525/527] Linking CXX shared library ../../../../build/intermediates/cxx/Debug/3z3ca292/obj/arm64-v8a/libassimp.so
+  [526/527] Linking CXX shared library ../../../../build/intermediates/cxx/Debug/3z3ca292/obj/arm64-v8a/libmain.so
+  [527/527] Linking CXX executable ../../../../build/intermediates/cxx/Debug/3z3ca292/obj/arm64-v8a/OffsetDumper
+  FAILED: ../../../../build/intermediates/cxx/Debug/3z3ca292/obj/arm64-v8a/OffsetDumper 
+  : && /usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++20 -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments   -Wl,--gc-sections CMakeFiles/OffsetDumper.dir/src/OffsetDumper.cpp.o -o ../../../../build/intermediates/cxx/Debug/3z3ca292/obj/arm64-v8a/OffsetDumper  ../../../../build/intermediates/cxx/Debug/3z3ca292/obj/arm64-v8a/libmain.so  ../../../../build/intermediates/cxx/Debug/3z3ca292/obj/arm64-v8a/libSDL2.so  _deps/glad-build/libglad.a  ../../../../build/intermediates/cxx/Debug/3z3ca292/obj/arm64-v8a/libassimp.so  -ldl  _deps/glm-build/glm/libglm.a  _deps/assimp-build/contrib/zlib/libzlibstatic.a  -latomic -lm && :
+  ld: error: undefined symbol: main
+  >>> referenced by crtbegin.c
+  >>>               /usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o:(_start_main)
+  >>> referenced by crtbegin.c
+  >>>               /usr/local/lib/android/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o:(_start_main)
+  clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+  ninja: build stopped: subcommand failed.
+  
+  C++ build system [build] failed while executing:
+      /usr/local/lib/android/sdk/cmake/3.22.1/bin/ninja \
+        -C \
+        /home/runner/work/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/android/app/.cxx/Debug/3z3ca292/arm64-v8a \
+        OffsetDumper \
+        SDL2 \
+        assimp \
+        main
+    from /home/runner/work/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/android/app
+
+Generating Code...
+EventManager.obj : error LNK2019: unresolved external symbol "public: bool __cdecl InputManager::IsMouseButtonPressed(unsigned char)const " (?IsMouseButtonPressed@InputManager@@QEBA_NE@Z) referenced in function "private: virtual bool __cdecl std::_Func_impl_no_alloc<class `public: void __cdecl EventManager::RegisterSecretEvents(class AntoniAI &,class CustomerAI &,class CustomerAI &,class CustomerAI &,class MarketMap &,class AudioManager &,class GameStateMachine &,class Camera &)'::`2'::<lambda_1>,bool>::_Do_call(void)" (?_Do_call@?$_Func_impl_no_alloc@V<lambda_1>@?1??RegisterSecretEvents@EventManager@@QEAAXAEAVAntoniAI@@AEAVCustomerAI@@11AEAVMarketMap@@AEAVAudioManager@@AEAVGameStateMachine@@AEAVCamera@@@Z@_N$$V@std@@EEAA_NXZ) [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\GameCore.vcxproj]
+D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\Release\GameCore.dll : fatal error LNK1120: 1 unresolved externals [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\GameCore.vcxproj]
+  Building Custom Rule D:/a/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/CMakeLists.txt
+  SimpleAntiCheat.cpp
+D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\TheSupermarket\src\SimpleAntiCheat.cpp(7,10): error C1083: Cannot open include file: 'unistd.h': No such file or directory [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\SimpleAntiCheat.vcxproj]
+  Building Custom Rule D:/a/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/CMakeLists.txt
+  UIRenderer.cpp
+UIRenderer.obj : error LNK2019: unresolved external symbol "public: __cdecl Shader::Shader(char const *,char const *)" (??0Shader@@QEAA@PEBD0@Z) referenced in function "public: bool __cdecl UIRenderer::Init(int,int)" (?Init@UIRenderer@@QEAA_NHH@Z) [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\UIRenderer.vcxproj]
+UIRenderer.obj : error LNK2019: unresolved external symbol "public: void __cdecl Shader::Use(void)const " (?Use@Shader@@QEBAXXZ) referenced in function "public: void __cdecl UIRenderer::RenderQuad(float,float,float,float,float,float,float,float,unsigned int)" (?RenderQuad@UIRenderer@@QEAAXMMMMMMMMI@Z) [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\UIRenderer.vcxproj]
+UIRenderer.obj : error LNK2019: unresolved external symbol "public: void __cdecl Shader::SetBool(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,bool)const " (?SetBool@Shader@@QEBAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@_N@Z) referenced in function "public: void __cdecl UIRenderer::RenderQuad(float,float,float,float,float,float,float,float,unsigned int)" (?RenderQuad@UIRenderer@@QEAAXMMMMMMMMI@Z) [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\UIRenderer.vcxproj]
+UIRenderer.obj : error LNK2019: unresolved external symbol "public: void __cdecl Shader::SetFloat(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,float)const " (?SetFloat@Shader@@QEBAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@M@Z) referenced in function "public: void __cdecl UIRenderer::RenderQuad(float,float,float,float,float,float,float,float,unsigned int)" (?RenderQuad@UIRenderer@@QEAAXMMMMMMMMI@Z) [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\UIRenderer.vcxproj]
+UIRenderer.obj : error LNK2019: unresolved external symbol "public: void __cdecl Shader::SetVec3(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct glm::vec<3,float,0> const &)const " (?SetVec3@Shader@@QEBAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBU?$vec@$02M$0A@@glm@@@Z) referenced in function "public: void __cdecl UIRenderer::RenderQuad(float,float,float,float,float,float,float,float,unsigned int)" (?RenderQuad@UIRenderer@@QEAAXMMMMMMMMI@Z) [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\UIRenderer.vcxproj]
+UIRenderer.obj : error LNK2019: unresolved external symbol "public: void __cdecl Shader::SetMat4(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct glm::mat<4,4,float,0> const &)const " (?SetMat4@Shader@@QEBAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBU?$mat@$03$03M$0A@@glm@@@Z) referenced in function "public: void __cdecl UIRenderer::RenderQuad(float,float,float,float,float,float,float,float,unsigned int)" (?RenderQuad@UIRenderer@@QEAAXMMMMMMMMI@Z) [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\UIRenderer.vcxproj]
+D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\Release\UIRenderer.dll : fatal error LNK1120: 6 unresolved externals [D:\a\The-SuperMarket-Horror\The-SuperMarket-Horror\build\UIRenderer.vcxproj]
+  Building Custom Rule D:/a/The-SuperMarket-Horror/The-SuperMarket-Horror/TheSupermarket/CMakeLists.txt
+  InputManager.cpp
+  UserInput.vcxproj -> D:\a\The-SuperMarket

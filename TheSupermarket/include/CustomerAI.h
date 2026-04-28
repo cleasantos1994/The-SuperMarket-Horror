@@ -25,7 +25,9 @@ enum class CustomerState {
     GHOSTLY
 };
 
-class CustomerAI {
+#include "Export.h"
+
+class GAME_API CustomerAI {
 public:
     CustomerAI(CustomerType type, glm::vec3 spawnPos,
                const std::string& modelPath);

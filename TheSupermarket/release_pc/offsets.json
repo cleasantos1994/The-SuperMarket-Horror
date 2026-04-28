@@ -1,0 +1,54 @@
+{
+    "GameDatamodel": {
+        "Bases": {
+            "GlobalContext": "0x640d6a7080",
+            "GameStateMachine": "0x640d6a7038",
+            "Player_Base": "0x0"
+        },
+        "Player": {
+            "Offset": "0x20",
+            "Camera_Offset": "0x0",
+            "FearLevel_Offset": "0x58",
+            "IsSlipping_Offset": "0x61"
+        },
+        "Items": {
+            "Inventory_Offset": "0x4c",
+            "HasPistol_Offset": "0x0",
+            "HasCarKeys_Offset": "0x1"
+        },
+        "Antoni": {
+            "Antoni_Ptr_Offset": "0x30",
+            "State_Offset": "0x8",
+            "Pos_Offset": "0xc"
+        },
+        "Characters": {
+            "Characters_Vector_Offset": "0x58"
+        },
+        "Raw_CPP_Offsets": {
+            "GlobalContext": {
+                "gsm": "0x0",
+                "player": "0x20",
+                "antoni": "0x30",
+                "characters": "0x58"
+            },
+            "Player": {
+                "camera": "0x0",
+                "inventory": "0x4c",
+                "fearLevel": "0x58",
+                "isSlipping": "0x61"
+            },
+            "Items": {
+                "hasPistol": "0x0",
+                "hasCarKeys": "0x1"
+            },
+            "Camera": {
+                "position": "0x0",
+                "front": "0xc"
+            },
+            "AntoniAI": {
+                "state": "0x8",
+                "position": "0xc"
+            }
+        }
+    }
+}

@@ -12,7 +12,9 @@ struct Particle {
     bool      active;
 };
 
-class ParticleSystem {
+#include "Export.h"
+
+class GAME_API ParticleSystem {
 public:
     explicit ParticleSystem(int maxParticles = 512);
     ~ParticleSystem();

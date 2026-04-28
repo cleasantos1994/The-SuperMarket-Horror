@@ -67,7 +67,9 @@ struct GameStateData {
     bool       guilhermeAlive  = true;
 };
 
-class GameStateMachine {
+#include "Export.h"
+
+class GAME_API GameStateMachine {
 public:
     static GameStateMachine& Get() {
         static GameStateMachine instance;

@@ -6,7 +6,9 @@
 #include <sstream>
 #include <iostream>
 
-class Shader {
+#include "Export.h"
+
+class GAME_API Shader {
 public:
     unsigned int ID;
     Shader(const char* vertexPath, const char* fragmentPath);

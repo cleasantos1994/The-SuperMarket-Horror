@@ -3,7 +3,9 @@
 #include <glm/glm.hpp>
 #include <map>
 
-class InputManager {
+#include "Export.h"
+
+class GAME_API InputManager {
 public:
     static InputManager& Get() {
         static InputManager instance;

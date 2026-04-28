@@ -4,8 +4,10 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <unistd.h>
 #include <csignal>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #include "GlobalContext.h"
 #include "Player.h"
 

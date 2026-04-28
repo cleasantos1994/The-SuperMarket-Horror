@@ -13,7 +13,9 @@ struct Task {
     float       interactRange;
 };
 
-class TaskSystem {
+#include "Export.h"
+
+class GAME_API TaskSystem {
 public:
     void InitDay1Tasks();
     void InitDay5Tasks();

@@ -12,7 +12,9 @@ struct StoryEvent {
     bool                   blocking = false;
 };
 
-class EventManager {
+#include "Export.h"
+
+class GAME_API EventManager {
 public:
     void RegisterEvent(StoryEvent event);
     void Update(float dt);

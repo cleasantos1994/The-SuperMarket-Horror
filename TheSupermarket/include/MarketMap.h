@@ -20,7 +20,9 @@ struct OilPuddle {
     float      lifetime;
 };
 
-class MarketMap {
+#include "Export.h"
+
+class GAME_API MarketMap {
 public:
     MarketMap();
     ~MarketMap();

@@ -2,7 +2,9 @@
 #include <string>
 #include <map>
 
-class AudioManager {
+#include "Export.h"
+
+class GAME_API AudioManager {
 public:
     static constexpr const char* BGM_MENU = "assets/audio/bgm_menu.wav";
     static constexpr const char* BGM_NORMAL_SHIFT = "assets/audio/bgm_normal_shift.wav";

@@ -85,13 +85,26 @@ set(AC_SOURCES src/SimpleAntiCheat.cpp)
 if(ANDROID)
     # On Android, combine everything into one libmain.so for simplicity
     add_library(main SHARED ${CORE_SOURCES} ${INPUT_SOURCES} ${UI_SOURCES} ${AC_SOURCES} src/main.cpp)
+    target_compile_definitions(main PRIVATE GAME_BUILD_DLL)
     set(GAME_TARGET main)
 else()
     # PC Version: Modular Shared Libraries
     add_library(UserInput SHARED ${INPUT_SOURCES})
+    target_compile_definitions(UserInput PRIVATE GAME_BUILD_DLL)
+    
     add_library(UIRenderer SHARED ${UI_SOURCES})
+    target_compile_definitions(UIRenderer PRIVATE GAME_BUILD_DLL)
+    
     add_library(SimpleAntiCheat SHARED ${AC_SOURCES})
+    target_compile_definitions(SimpleAntiCheat PRIVATE GAME_BUILD_DLL)
+    
     add_library(GameCore SHARED ${CORE_SOURCES})
+    target_compile_definitions(GameCore PRIVATE GAME_BUILD_DLL)
+    
+    # Internal Dependencies
+    target_link_libraries(GameCore PRIVATE UserInput)
+    target_link_libraries(UIRenderer PRIVATE GameCore)
+    target_link_libraries(SimpleAntiCheat PRIVATE GameCore)
     
     add_executable(TheSupermarket src/main.cpp)
     target_link_libraries(TheSupermarket PRIVATE GameCore UserInput UIRenderer SimpleAntiCheat)
@@ -102,10 +115,8 @@ else()
 endif()
 
 # Offset Dumper Target (Built as executable for all platforms for internal tooling)
-add_executable(OffsetDumper src/OffsetDumper.cpp)
-if(ANDROID)
-    target_link_libraries(OffsetDumper PRIVATE main)
-else()
+if(NOT ANDROID)
+    add_executable(OffsetDumper src/OffsetDumper.cpp)
     target_link_libraries(OffsetDumper PRIVATE GameCore UserInput UIRenderer SimpleAntiCheat)
     list(APPEND MODULES OffsetDumper)
 endif()
@@ -134,7 +145,9 @@ endmacro()
 
 if(ANDROID)
     configure_game_target(main)
-    configure_game_target(OffsetDumper)
+    if(TARGET OffsetDumper)
+        configure_game_target(OffsetDumper)
+    endif()
 else()
     foreach(module ${MODULES})
         configure_game_target(${module})
