@@ -4,7 +4,7 @@
 
 #include "Export.h"
 
-class GAME_API PostProcess {
+class GAMECORE_API PostProcess {
 public:
     PostProcess();
     bool Init(int w, int h);

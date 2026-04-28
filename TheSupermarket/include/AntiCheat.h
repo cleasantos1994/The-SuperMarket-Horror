@@ -4,7 +4,7 @@
 
 #include "Export.h"
 
-class GAME_API SimpleAntiCheat {
+class AC_API SimpleAntiCheat {
 public:
     static SimpleAntiCheat& Get() {
         static SimpleAntiCheat instance;

@@ -4,7 +4,7 @@
 
 #include "Export.h"
 
-class GAME_API SaveLoad {
+class GAMECORE_API SaveLoad {
 public:
     static void SaveGame(const GameStateData& state, const Player& player);
     static bool LoadGame(GameStateData& state, Player& player);

@@ -14,7 +14,7 @@ struct StoryEvent {
 
 #include "Export.h"
 
-class GAME_API EventManager {
+class GAMECORE_API EventManager {
 public:
     void RegisterEvent(StoryEvent event);
     void Update(float dt);

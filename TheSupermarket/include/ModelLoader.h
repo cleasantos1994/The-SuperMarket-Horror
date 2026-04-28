@@ -15,7 +15,7 @@ struct Mesh {
 
 #include "Export.h"
 
-class GAME_API ModelLoader {
+class GAMECORE_API ModelLoader {
 public:
     ModelLoader(const std::string& path);
     void Draw(const Shader& shader);

@@ -8,7 +8,7 @@
 
 #include "Export.h"
 
-class GAME_API Shader {
+class GAMECORE_API Shader {
 public:
     unsigned int ID;
     Shader(const char* vertexPath, const char* fragmentPath);

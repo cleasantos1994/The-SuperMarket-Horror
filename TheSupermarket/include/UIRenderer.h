@@ -4,7 +4,7 @@
 
 #include "Export.h"
 
-class GAME_API UIRenderer {
+class UI_API UIRenderer {
 public:
     bool Init(int screenW, int screenH);
     void Shutdown();

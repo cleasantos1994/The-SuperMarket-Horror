@@ -1,3 +1,4 @@
+#define SDL_MAIN_HANDLED
 #include <glad/glad.h>
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
@@ -29,6 +30,7 @@ static constexpr float FEAR_REGEN   = 0.3f;
 static float sceneTimer = 0.0f;
 
 int main(int argc, char* argv[]) {
+    SDL_SetMainReady();
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
         return -1;

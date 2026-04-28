@@ -15,7 +15,7 @@ struct Task {
 
 #include "Export.h"
 
-class GAME_API TaskSystem {
+class GAMECORE_API TaskSystem {
 public:
     void InitDay1Tasks();
     void InitDay5Tasks();

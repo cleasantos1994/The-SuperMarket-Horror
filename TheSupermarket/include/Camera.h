@@ -4,7 +4,7 @@
 
 #include "Export.h"
 
-class GAME_API Camera {
+class GAMECORE_API Camera {
 public:
     Camera(glm::vec3 startPos = {0.f, 1.7f, 0.f},
            float yaw = -90.f, float pitch = 0.f);

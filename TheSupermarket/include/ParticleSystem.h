@@ -14,7 +14,7 @@ struct Particle {
 
 #include "Export.h"
 
-class GAME_API ParticleSystem {
+class GAMECORE_API ParticleSystem {
 public:
     explicit ParticleSystem(int maxParticles = 512);
     ~ParticleSystem();

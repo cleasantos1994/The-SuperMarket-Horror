@@ -5,7 +5,7 @@
 
 #include "Export.h"
 
-class GAME_API InputManager {
+class INPUT_API InputManager {
 public:
     static InputManager& Get() {
         static InputManager instance;

@@ -24,7 +24,7 @@ enum class AntoniState {
 
 #include "Export.h"
 
-class GAME_API AntoniAI {
+class GAMECORE_API AntoniAI {
 public:
     AntoniAI(const std::string& modelPath);
     ~AntoniAI();

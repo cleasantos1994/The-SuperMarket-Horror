@@ -85,21 +85,21 @@ set(AC_SOURCES src/SimpleAntiCheat.cpp)
 if(ANDROID)
     # On Android, combine everything into one libmain.so for simplicity
     add_library(main SHARED ${CORE_SOURCES} ${INPUT_SOURCES} ${UI_SOURCES} ${AC_SOURCES} src/main.cpp)
-    target_compile_definitions(main PRIVATE GAME_BUILD_DLL)
+    target_compile_definitions(main PRIVATE GAME_CORE_BUILD USER_INPUT_BUILD UI_RENDERER_BUILD ANTI_CHEAT_BUILD)
     set(GAME_TARGET main)
 else()
     # PC Version: Modular Shared Libraries
     add_library(UserInput SHARED ${INPUT_SOURCES})
-    target_compile_definitions(UserInput PRIVATE GAME_BUILD_DLL)
+    target_compile_definitions(UserInput PRIVATE USER_INPUT_BUILD)
     
     add_library(UIRenderer SHARED ${UI_SOURCES})
-    target_compile_definitions(UIRenderer PRIVATE GAME_BUILD_DLL)
+    target_compile_definitions(UIRenderer PRIVATE UI_RENDERER_BUILD)
     
     add_library(SimpleAntiCheat SHARED ${AC_SOURCES})
-    target_compile_definitions(SimpleAntiCheat PRIVATE GAME_BUILD_DLL)
+    target_compile_definitions(SimpleAntiCheat PRIVATE ANTI_CHEAT_BUILD)
     
     add_library(GameCore SHARED ${CORE_SOURCES})
-    target_compile_definitions(GameCore PRIVATE GAME_BUILD_DLL)
+    target_compile_definitions(GameCore PRIVATE GAME_CORE_BUILD)
     
     # Internal Dependencies
     target_link_libraries(GameCore PRIVATE UserInput)

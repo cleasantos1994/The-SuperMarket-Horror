@@ -22,7 +22,7 @@ struct OilPuddle {
 
 #include "Export.h"
 
-class GAME_API MarketMap {
+class GAMECORE_API MarketMap {
 public:
     MarketMap();
     ~MarketMap();

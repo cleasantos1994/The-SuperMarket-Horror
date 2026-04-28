@@ -18,7 +18,7 @@
 
 // The GlobalContext acts as the "Internal" hub of the game.
 // It centralizes all manager pointers for easy access and internal hooking.
-class GAME_API GlobalContext {
+class GAMECORE_API GlobalContext {
 public:
     static GlobalContext& Get() {
         static GlobalContext instance;

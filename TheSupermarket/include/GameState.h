@@ -69,7 +69,7 @@ struct GameStateData {
 
 #include "Export.h"
 
-class GAME_API GameStateMachine {
+class GAMECORE_API GameStateMachine {
 public:
     static GameStateMachine& Get() {
         static GameStateMachine instance;
